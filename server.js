@@ -169,6 +169,16 @@ app.post("/issue", authMiddleware, async (req, res) => {
 app.use("/certs", express.static(path.join(process.cwd(), "certs")));
 
 // ======== 서버 실행 ========
+
+// 루트 페이지 접속 시 로그인 페이지로 이동
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
+});
+app.get("/", (req, res) => res.redirect("/register.html"));
+
+
 app.listen(3000, () =>
   console.log("🚀 Server running on http://localhost:3000")
 );
+
+app.use(express.static("public"));

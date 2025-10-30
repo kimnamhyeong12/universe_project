@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luna Embassy 로그인</title>
+  <style>
+    body {
+      font-family: 'Arial';
+      background: #0a0a0a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .box {
+      background: #111;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #1e90ff;
+      text-align: center;
+      width: 320px;
+    }
+    input {
+      margin: 8px;
+      padding: 8px;
+      width: 90%;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: #1e90ff;
+      color: white;
+      cursor: pointer;
+      width: 95%;
+      border-radius: 5px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #4682b4;
+    }
+    .link {
+      margin-top: 15px;
+    }
+    .link a {
+      color: #1e90ff;
+      text-decoration: none;
+    }
+    .link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🌙 Luna Embassy 로그인</h2>
+    <input type="email" id="email" placeholder="이메일" /><br />
+    <input type="password" id="password" placeholder="비밀번호" /><br />
+    <button onclick="login()">로그인</button>
+    <p id="msg"></p>
+    <div class="link">
+      <p>계정이 없나요? <a href="register.html">회원가입</a></p>
+    </div>
+  </div>
+
+  <script>
+    // ✅ 로그인 상태 유지: 토큰이 있으면 자동 이동
+    window.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("jwt");
+      if (token) {
+        // 이미 로그인된 상태면 바로 발급 페이지로
+        window.location.href = "issue.html";
+      }
+    });
+
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const msg = document.getElementById("msg");
+
+      if (!email || !password) {
+        msg.innerText = "❌ 이메일과 비밀번호를 모두 입력하세요.";
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (data.token) {
+          // ✅ JWT 저장 (로그인 유지용)
+          localStorage.setItem("jwt", data.token);
+          msg.innerText = "✅ 로그인 성공!";
+          setTimeout(() => (window.location.href = "issue.html"), 1000);
+        } else {
+          msg.innerText = "❌ 로그인 실패: " + (data.error || "오류");
+        }
+      } catch (err) {
+        msg.innerText = "❌ 서버 오류: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>

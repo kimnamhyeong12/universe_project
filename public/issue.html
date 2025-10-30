@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luna Embassy - 인증서 발급</title>
+  <style>
+    body {
+      font-family: 'Arial';
+      background: #0a0a0a;
+      color: white;
+      text-align: center;
+    }
+    input {
+      margin: 10px;
+      padding: 8px;
+      width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #1e90ff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #4682b4;
+    }
+    .box {
+      background: #111;
+      padding: 40px;
+      margin-top: 100px;
+      display: inline-block;
+      border-radius: 10px;
+    }
+    a {
+      color: #00bfff;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #logout {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 15px;
+      background: #dc143c;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+    #logout:hover {
+      background: #b22222;
+    }
+  </style>
+</head>
+<body>
+  <!-- 로그아웃 버튼 -->
+  <button id="logout" onclick="logout()">로그아웃</button>
+
+  <div class="box">
+    <h2>🪐 행성 인증서 발급</h2>
+    <input type="text" id="assetType" placeholder="자산 종류 (예: planet)" /><br />
+    <input type="text" id="assetId" placeholder="자산 ID (예: LUNA-001)" /><br />
+    <button onclick="issue()">발급하기</button>
+    <p id="msg"></p>
+  </div>
+
+  <script>
+    // ✅ 로그인 상태 확인 (토큰 없으면 로그인 페이지로)
+    window.addEventListener("DOMContentLoaded", () => {
+      const token = localStorage.getItem("jwt");
+      if (!token) {
+        alert("로그인이 필요합니다!");
+        window.location.href = "login.html";
+      }
+    });
+
+    // ✅ 인증서 발급 기능
+    async function issue() {
+      const token = localStorage.getItem("jwt");
+      if (!token) {
+        alert("로그인이 필요합니다!");
+        return (window.location.href = "login.html");
+      }
+
+      const assetType = document.getElementById("assetType").value.trim();
+      const assetId = document.getElementById("assetId").value.trim();
+      const msg = document.getElementById("msg");
+
+      if (!assetType || !assetId) {
+        msg.innerText = "❌ 모든 항목을 입력하세요.";
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/issue", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token,
+          },
+          body: JSON.stringify({ assetType, assetId }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.pdfUrl) {
+          msg.innerHTML = `✅ 발급 성공!<br><a href="http://localhost:3000${data.pdfUrl}" target="_blank">📄 PDF 열기</a>`;
+        } else {
+          msg.innerText = "❌ 발급 실패: " + (data.error || "서버 오류");
+        }
+      } catch (err) {
+        msg.innerText = "❌ 요청 실패: " + err.message;
+      }
+    }
+
+    // ✅ 로그아웃 기능
+    function logout() {
+      localStorage.removeItem("jwt");
+      alert("로그아웃 되었습니다.");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
