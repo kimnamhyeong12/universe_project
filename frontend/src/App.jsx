@@ -1,46 +1,27 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
 
-// --- (참고) Tailwind CSS 설정 ---
-// 이 코드는 CDN 방식 (index.html에 <script> 태그)으로 작동합니다.
-// 로컬 설치 방식(postcss.config.js 등)으로 되돌리려면
-// 1. 이 파일의 "1. AuthContext 영역" 하단의 `jwt-decode` 설치
-// 2. index.html의 CDN 스크립트 제거
-// 3. main.jsx의 `index.css` 임포트 복구
-// 4. "npm install"로 Tailwind 4대장 + jwt-decode 설치
-// 5. "postcss.config.cjs" 파일명 복구
-// ...등의 작업이 필요합니다. (지금은 CDN 방식으로 둡니다)
+// --- (참고) ---
+// 1. 이 코드는 CDN 방식 (index.html에 <script>)으로 작동합니다.
+// 2. 'jwt-decode'는 CDN (esm.sh)에서 불러옵니다. (npm install 필요 X)
 
-// --- 1. AuthContext 영역 ---
-// 백엔드에서 받은 JWT(토큰)을 파싱(해석)해서 사용자 이름을 꺼내는 라이브러리
-// ★★★ 변경점: npm install 대신 CDN에서 직접 불러오도록 수정 ★★★
-// 이 기능은 CDN(esm.sh)에서 'jwt-decode'를 직접 불러옵니다.
-// 별도의 "npm install jwt-decode"가 필요하지 않습니다.
 import { jwtDecode } from 'https://esm.sh/jwt-decode@4.0.0';
 
-// 1-1. 전역 보관함(Context) 생성
+// --- 1. AuthContext 영역 ---
+
 const AuthContext = createContext();
 
-// 1-2. Context를 사용하기 위한 헬퍼 함수
-// (컴포넌트에서 const auth = useAuth() 로 쉽게 불러올 수 있게 함)
 export const useAuth = () => {
   return useContext(AuthContext);
 };
 
-// 1-3. 전역 보관함을 제공하는 "Provider" 컴포넌트
-// (App 전체를 감싸서, 모든 자식 컴포넌트가 로그인 상태를 공유하게 함)
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // 'null'이면 비로그인 상태
+  const [user, setUser] = useState(null); 
 
-  // 1-4. 앱이 처음 로드될 때(새로고침 시) localStorage 확인
   useEffect(() => {
     const token = localStorage.getItem('celestia_token');
     if (token) {
       try {
-        const decoded = jwtDecode(token); // 토큰 해석
-        // ★★★ 백엔드와 협의 필요 ★★★
-        // 팀장님 백엔드(server.js)의 JWT 생성 로직(image_aff355.jpg)을 보니
-        // { id: user.id, username: user.username, email: user.email }
-        // 이렇게 3가지 정보를 토큰에 담고 있었습니다.
+        const decoded = jwtDecode(token); 
         setUser({ 
           username: decoded.username, 
           email: decoded.email,
@@ -49,41 +30,31 @@ export const AuthProvider = ({ children }) => {
         });
       } catch (error) {
         console.error("토큰 해석 오류:", error);
-        localStorage.removeItem('celestia_token'); // 잘못된 토큰 삭제
+        localStorage.removeItem('celestia_token'); 
       }
     }
   }, []);
 
-  // 1-5. 로그인 함수 (백엔드와 통신)
   const login = async (username, password) => {
     try {
-      // ★★★ 백엔드와 협의 필요 (포트/주소) ★★★
-      // 팀장님 서버 포트가 8829이고, 주소가 /login 인 것을 기준으로 합니다.
+      // ★★★ 백엔드 API 주소 (로그인) ★★★
       const response = await fetch('http://localhost:8829/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        // 서버에서 보낸 에러 메시지 (예: "Wrong password")
-        throw new Error(data.error || '로그인 실패');
-      }
+      if (!response.ok) throw new Error(data.error || '로그인 실패');
       
-      // 로그인이 성공하면 (예: { message: "Login success", token: "..." })
       const { token } = data;
-      localStorage.setItem('celestia_token', token); // 토큰을 브라우저에 저장
-      
-      const decoded = jwtDecode(token); // 토큰 해석
+      localStorage.setItem('celestia_token', token); 
+      const decoded = jwtDecode(token); 
       setUser({ 
         username: decoded.username, 
         email: decoded.email,
         id: decoded.id,
         token: token 
       });
-
       return { success: true };
 
     } catch (error) {
@@ -92,48 +63,224 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 1-6. 로그아웃 함수
   const logout = () => {
     localStorage.removeItem('celestia_token');
     setUser(null);
   };
 
-  // 1-7. 보관함에 담을 "값"들
+  // ★★★ 신규: 회원가입 함수 ★★★
+  const register = async (username, email, password) => {
+    try {
+      // ★★★ 백엔드 API 주소 (회원가입) ★★★
+      // 팀장님 파일 목록에 'register.html'이 있으므로, '/register'를 엔드포인트로 가정합니다.
+      const response = await fetch('http://localhost:8829/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // (예: "Username already exists")
+        throw new Error(data.error || '회원가입 실패'); 
+      }
+
+      // 회원가입 성공
+      return { success: true, message: data.message || '회원가입 성공!' };
+
+    } catch (error) {
+      console.error("회원가입 API 오류:", error);
+      return { success: false, message: error.message };
+    }
+  };
+
+
   const value = {
-    user, // 현재 유저 정보 (null 혹은 객체)
-    login, // 로그인 함수
-    logout, // 로그아웃 함수
+    user,
+    login,
+    logout,
+    register, // ★ 신규: register 함수를 전역 보관함에 추가
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // --- 4. 모달(Modal) 컴포넌트 (업그레이드) ---
-// (이전과 동일... loginForm 로직만 추가됨)
 const Modal = ({ title, children, isOpen, onClose }) => {
-  const auth = useAuth(); // 전역 보관함 사용!
+  const auth = useAuth(); 
+  
+  // '로그인' 모달 전용 상태
+  const [isRegisterView, setIsRegisterView] = useState(false); // 뷰 토글 상태
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // 회원가입용
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState(''); // 회원가입용
+  
+  const [error, setError] = useState('');     // API 에러 메시지
+  const [success, setSuccess] = useState(''); // API 성공 메시지
 
+  // 모달이 닫힐 때 모든 상태 초기화
+  const handleClose = () => {
+    setIsRegisterView(false);
+    setUsername('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setError('');
+    setSuccess('');
+    onClose(); // 부모 컴포넌트의 모달 닫기 실행
+  };
+
+  // 로그인 폼 제출
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // 이전 에러 초기화
+    setError('');
+    setSuccess('');
     
     const result = await auth.login(username, password);
     
     if (result.success) {
-      onClose(); // 로그인 성공 시 모달 닫기
+      handleClose(); // 로그인 성공 시 모달 닫기
     } else {
       setError(result.message || '아이디 또는 비밀번호가 잘못되었습니다.');
     }
   };
-  
+
+  // ★ 신규: 회원가입 폼 제출
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    // 1. 프론트엔드 유효성 검사
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('비밀번호는 6자리 이상이어야 합니다.');
+      return;
+    }
+    
+    // 2. AuthContext의 register 함수 호출 (백엔드 통신)
+    const result = await auth.register(username, email, password);
+    
+    if (result.success) {
+      setSuccess('회원가입에 성공했습니다! 이제 로그인해주세요.');
+      // 폼 초기화 및 로그인 뷰로 전환
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setIsRegisterView(false); 
+    } else {
+      setError(result.message || '회원가입에 실패했습니다.');
+    }
+  };
+
   if (!isOpen) return null;
+
+  // "로그인" 모달일 경우, 로그인/회원가입 폼을 렌더링
+  if (title === '로그인') {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 transition-opacity duration-300 animate-fadeIn"
+        onClick={handleClose}
+      >
+        <div
+          className="bg-slate-900/80 backdrop-blur-lg text-white w-11/12 max-w-2xl rounded-lg border border-cyan-500/30 shadow-2xl shadow-cyan-500/20 p-8 relative transition-all duration-300 animate-scaleIn"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="absolute top-4 right-6 text-gray-400 hover:text-cyan-300 text-3xl font-bold transition-colors"
+            onClick={handleClose}
+          >
+            &times;
+          </button>
+          
+          {/* ★ 변경점: 뷰 상태에 따라 제목 변경 */}
+          <h2 className="text-3xl font-bold text-cyan-300 border-b-2 border-cyan-300/50 pb-3 mb-6">
+            {isRegisterView ? '회원가입' : '로그인'}
+          </h2>
+
+          <div className="text-lg leading-relaxed space-y-4">
+            {/* 공통 에러/성공 메시지 표시창 */}
+            {error && (<p className="text-red-400 bg-red-900/50 p-3 rounded text-center">{error}</p>)}
+            {success && (<p className="text-green-400 bg-green-900/50 p-3 rounded text-center">{success}</p>)}
+
+            {isRegisterView ? (
+              // --- 1. 회원가입 폼 ---
+              <form className="space-y-4" onSubmit={handleRegisterSubmit}>
+                <div>
+                  <label className="block text-sm font-bold mb-2" htmlFor="reg-username">아이디 (Username)</label>
+                  <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="reg-username" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2" htmlFor="reg-email">이메일 (Email)</label>
+                  <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="reg-email" type="email" placeholder="email@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2" htmlFor="reg-password">비밀번호</label>
+                  <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="reg-password" type="password" placeholder="6자리 이상" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+                 <div>
+                  <label className="block text-sm font-bold mb-2" htmlFor="reg-confirm-password">비밀번호 확인</label>
+                  <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="reg-confirm-password" type="password" placeholder="비밀번호 재입력" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                </div>
+                <button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded transition-colors duration-300">
+                  회원가입
+                </button>
+                <a 
+                  href="#" 
+                  className="inline-block align-baseline font-bold text-sm text-cyan-400 hover:text-cyan-300"
+                  onClick={() => {
+                    setIsRegisterView(false);
+                    setError('');
+                    setSuccess('');
+                  }}
+                >
+                  &larr; 로그인으로 돌아가기
+                </a>
+              </form>
+            ) : (
+              // --- 2. 로그인 폼 ---
+              <form className="space-y-4" onSubmit={handleLoginSubmit}>
+                <div>
+                  <label className="block text-sm font-bold mb-2" htmlFor="username">아이디</label>
+                  <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="username" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2" htmlFor="password">비밀번호</label>
+                  <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="password" type="password" placeholder="******************" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+                <button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded transition-colors duration-300">
+                  로그인
+                </button>
+                <a 
+                  href="#" 
+                  className="inline-block align-baseline font-bold text-sm text-cyan-400 hover:text-cyan-300"
+                  onClick={() => {
+                    setIsRegisterView(true);
+                    setError('');
+                    setSuccess('');
+                  }}
+                >
+                  계정이 없으신가요? 회원가입
+                </a>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // "CELESTIA 란?" 등 다른 모든 모달
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 transition-opacity duration-300 animate-fadeIn"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="bg-slate-900/80 backdrop-blur-lg text-white w-11/12 max-w-2xl rounded-lg border border-cyan-500/30 shadow-2xl shadow-cyan-500/20 p-8 relative transition-all duration-300 animate-scaleIn"
@@ -141,7 +288,7 @@ const Modal = ({ title, children, isOpen, onClose }) => {
       >
         <button
           className="absolute top-4 right-6 text-gray-400 hover:text-cyan-300 text-3xl font-bold transition-colors"
-          onClick={onClose}
+          onClick={handleClose}
         >
           &times;
         </button>
@@ -149,50 +296,13 @@ const Modal = ({ title, children, isOpen, onClose }) => {
           {title}
         </h2>
         <div className="text-lg leading-relaxed space-y-4">
-          {/* "로그인" 모달일 경우에만 로그인 폼을 렌더링 */}
-          {title === '로그인' ? (
-            <form className="space-y-4" onSubmit={handleLoginSubmit}>
-              {error && (
-                <p className="text-red-400 bg-red-900/50 p-3 rounded text-center">{error}</p>
-              )}
-              <div>
-                <label className="block text-sm font-bold mb-2" htmlFor="username">아이디</label>
-                <input 
-                  className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" 
-                  id="username" 
-                  type="text" 
-                  placeholder="Username" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2" htmlFor="password">비밀번호</label>
-                <input 
-                  className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" 
-                  id="password" 
-                  type="password" 
-                  placeholder="******************" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded transition-colors duration-300">
-                로그인
-              </button>
-              <a href="#" className="inline-block align-baseline font-bold text-sm text-cyan-400 hover:text-cyan-300">
-                회원가입
-              </a>
-            </form>
-          ) : (
-            // 다른 모달들은 원래 내용을 그대로 렌더링
-            children
-          )}
+          {children}
         </div>
       </div>
     </div>
   );
 };
+
 
 // --- 1. 헤더(Header) 컴포넌트 ---
 const MainHeader = ({ onModalOpen }) => {
@@ -208,7 +318,6 @@ const MainHeader = ({ onModalOpen }) => {
         <a href="#" className="text-gray-300 hover:text-white transition-colors" onClick={() => onModalOpen('team')}>팀 소개</a>
       </nav>
       <div className="hidden md:block">
-        {/* ★★★ 변경점: 로그인 상태에 따라 UI 변경 ★★★ */}
         {auth.user ? (
           // 1. 로그인 된 상태
           <div className="flex items-center space-x-4">
@@ -243,7 +352,6 @@ const MainHeader = ({ onModalOpen }) => {
 
 // --- 2. 스플래시 페이지(Splash Page) 컴포넌트 ---
 const SplashPage = ({ onEnter }) => {
-  // (이전과 동일... `auth`는 헤더와 모달이 알아서 쓰므로 여기엔 필요 X)
   const [modalContent, setModalContent] = useState(null); 
   const openModal = (type) => setModalContent(type);
   const closeModal = () => setModalContent(null);
@@ -254,7 +362,6 @@ const SplashPage = ({ onEnter }) => {
       
       <div className="w-screen h-screen relative flex items-center justify-center text-white overflow-hidden">
         
-        {/* 1. 비디오 (z-[1]) */}
         <video
           autoPlay
           muted
@@ -262,15 +369,12 @@ const SplashPage = ({ onEnter }) => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover z-[1]"
         >
-          {/* 비디오 파일은 "frontend/public/celestia_bg.mp4" 에 있어야 합니다 */}
           <source src="/celestia_bg.mp4" type="video/mp4" />
           브라우저가 비디오 태그를 지원하지 않습니다.
         </video>
         
-        {/* 2. 오버레이 (z-[2]) */}
         <div className="absolute inset-0 w-full h-full bg-black/60 z-[2]" />
         
-        {/* 3. 중앙 콘텐츠 (z-[3]) */}
         <div className="relative z-[3] text-center animate-fadeIn">
           <h1 className="text-7xl md:text-8xl font-black tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }}>
             CELESTIA
@@ -321,9 +425,6 @@ const SplashPage = ({ onEnter }) => {
            </ul>
       </Modal>
       
-      {/* "로그인" 모달은 이제 title === '로그인' 분기 로직에 의해
-        자동으로 폼을 포함하게 되므로, children을 넘겨줄 필요가 없습니다.
-      */}
       <Modal title="로그인" isOpen={modalContent === 'login'} onClose={closeModal} />
     </>
   );
@@ -348,14 +449,11 @@ const Universe = () => {
     <div className="w-screen h-screen bg-black text-white flex flex-col items-center justify-center">
       <h1 className="text-5xl">3D 우주 공간 (구현 예정)</h1>
       
-      {/* 로그인된 유저 이름 보여주기 (테스트용) */}
       {auth.user ? (
         <p className="text-2xl mt-4 text-cyan-400">환영합니다, {auth.user.username}님!</p>
       ) : (
         <p className="text-2xl mt-4 text-red-500">로그인되지 않았습니다.</p>
       )}
-      
-      {/* 여기에 @react-three/fiber 의 <Canvas>가 들어옵니다. */}
     </div>
   );
 };
@@ -372,14 +470,8 @@ export default function App() {
     }, 2000); // 2초 로딩 시뮬레이션
   };
 
-  // ★★★ 변경점: App 전체를 AuthProvider로 감싸기 ★★★
   return (
     <AuthProvider>
-      {/* AuthProvider가 "전역 보관함"을 제공하므로,
-        이제 SplashPage, LoadingScreen, Universe 컴포넌트와
-        그 모든 자식들(MainHeader, Modal 등)은
-        useAuth() 훅을 통해 로그인 상태를 공유할 수 있습니다.
-      */}
       {view === 'splash' && <SplashPage onEnter={handleEnter} />}
       {view === 'loading' && <LoadingScreen />}
       {view === 'app' && <Universe />}
