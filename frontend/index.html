@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CELESTIA</title>
+    
+    <!-- 1. Tailwind CSS CDN 스크립트 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 2. Google Fonts 로드 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- 3. 기본 폰트 및 애니메이션 CSS (필수) -->
+    <!-- (tailwind.config.js가 없으므로, 애니메이션을 여기에 직접 정의합니다) -->
+    <style>
+      body {
+        font-family: 'Noto Sans KR', 'Inter', sans-serif;
+        background-color: #000; 
+      }
+
+      /* 모달을 위한 애니메이션 Keyframes */
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      
+      /* Tailwind가 이 애니메이션을 사용할 수 있도록 등록 */
+      .animate-fadeIn { 
+        animation: fadeIn 0.5s ease-out; 
+      }
+      .animate-scaleIn { 
+        animation: scaleIn 0.3s ease-out; 
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
