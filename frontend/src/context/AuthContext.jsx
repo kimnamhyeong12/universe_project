@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
-// =============================================================
-// 1) AuthContext: 전역 인증 상태(로그인 유저 정보 등)를 보관하는 컨텍스트
-//    - 어디서든 useAuth()로 user, login(), logout(), register() 사용 가능
-// =============================================================
-
-
 import { jwtDecode } from 'https://esm.sh/jwt-decode@4.0.0';
+
+// =============================================================
+// AuthContext: 전역 인증 상태(로그인, 회원가입, 로그아웃 관리)
+// =============================================================
 
 const AuthContext = createContext();
 
@@ -14,47 +12,50 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // 현재 로그인한 사용자 정보 (없으면 null)
+  const [user, setUser] = useState(null);
 
-  // 앱이 처음 렌더링될 때, localStorage에 저장된 토큰이 있으면 자동 로그인 시도
+  // 앱 최초 실행 시 localStorage에서 토큰 복원
   useEffect(() => {
     const token = localStorage.getItem('celestia_token');
     if (token) {
       try {
-        const decoded = jwtDecode(token); // 토큰 내부 정보(유저 id/이메일 등) 추출
-        setUser({ 
-          username: decoded.username, 
+        const decoded = jwtDecode(token);
+        setUser({
+          username: decoded.username,
           email: decoded.email,
           id: decoded.id,
-          token: token 
+          token: token
         });
       } catch (error) {
         console.error('토큰 해석 오류:', error);
-        localStorage.removeItem('celestia_token'); // 깨진 토큰이면 제거
+        localStorage.removeItem('celestia_token');
       }
     }
   }, []);
 
-  // 로그인: 백엔드 /login 호출 → 성공 시 토큰 저장 + user 세팅
-  const login = async (username, password) => {
+  // ✅ 로그인
+  const login = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
+
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || '로그인 실패');
 
       const { token } = data;
-      localStorage.setItem('celestia_token', token); // 새 토큰 저장
+      localStorage.setItem('celestia_token', token);
+
       const decoded = jwtDecode(token);
-      setUser({ 
-        username: decoded.username, 
+      setUser({
+        username: decoded.username,
         email: decoded.email,
         id: decoded.id,
-        token: token 
+        token: token
       });
+
       return { success: true };
     } catch (error) {
       console.error('로그인 API 오류:', error);
@@ -62,16 +63,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 로그아웃: 토큰 삭제 + user 초기화
+  // ✅ 로그아웃
   const logout = () => {
     localStorage.removeItem('celestia_token');
     setUser(null);
   };
 
-  // 회원가입: 백엔드 /register 호출 → 성공/실패 메시지 반환
+  // ✅ 회원가입
   const register = async (username, email, password) => {
     try {
-      const response = await fetch('http://localhost:5000/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
@@ -79,11 +80,9 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       if (!response.ok) {
-        // 예: { error: 'Username already exists' }
         throw new Error(data.error || '회원가입 실패');
       }
 
-      // 성공 시에는 보통 바로 로그인시키거나 안내 메시지를 보여줌
       return { success: true, message: data.message || '회원가입 성공!' };
     } catch (error) {
       console.error('회원가입 API 오류:', error);
@@ -91,8 +90,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 컨텍스트로 내보낼 값들
   const value = { user, login, logout, register };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
