@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   // 로그인: 백엔드 /login 호출 → 성공 시 토큰 저장 + user 세팅
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:8829/login', {
+      const response = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   // 회원가입: 백엔드 /register 호출 → 성공/실패 메시지 반환
   const register = async (username, email, password) => {
     try {
-      const response = await fetch('http://localhost:8829/register', {
+      const response = await fetch('http://localhost:5000/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
