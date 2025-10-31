@@ -1,61 +1,56 @@
 // server.js
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
+const PDFDocument = require("pdfkit");
+const QRCode = require("qrcode");
+const crypto = require("crypto");
 
-const authRoutes = require('./routes/auth');
-const planetRoutes = require('./routes/planet');
+// ======== 환경 변수 로드 ========
+dotenv.config();
 
+// ======== Express 설정 ========
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/planets', planetRoutes);
-
-// MongoDB 연결
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log('✅ MongoDB 연결 성공');
-  app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
-})
-.catch(err => console.error('❌ MongoDB 연결 실패:', err));
-import express from "express";
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import fs from "fs";
-import path from "path";
-import PDFDocument from "pdfkit";
-import QRCode from "qrcode";
-import crypto from "crypto";
-import dotenv from "dotenv";
-
-dotenv.config();
-const app = express();
-app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ======== MongoDB 연결 ========
 mongoose
-  .connect("mongodb://localhost:27017/luna_embassy")
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error(err));
+  .connect(process.env.MONGO_URI || "mongodb://localhost:27017/universe_project", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB 연결 성공"))
+  .catch((err) => console.error("❌ MongoDB 연결 실패:", err));
 
 // ======== 스키마 정의 ========
+
+// 사용자
 const userSchema = new mongoose.Schema({
   username: String,
   email: String,
   password: String,
 });
 
+// 행성
+const planetSchema = new mongoose.Schema({
+  name: String,
+  description: String,
+  imageUrl: String,
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  price: Number,
+  isForSale: Boolean,
+});
+
+// 인증서
 const certSchema = new mongoose.Schema({
   certId: String,
   ownerUserId: String,
@@ -68,7 +63,9 @@ const certSchema = new mongoose.Schema({
   pdfPath: String,
 });
 
+// 모델 등록
 const User = mongoose.model("User", userSchema);
+const Planet = mongoose.model("Planet", planetSchema);
 const Certificate = mongoose.model("Certificate", certSchema);
 
 // ======== JWT 미들웨어 ========
@@ -86,19 +83,23 @@ function authMiddleware(req, res, next) {
 }
 
 // ======== 회원가입 ========
-app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
-  const existing = await User.findOne({ email });
-  if (existing) return res.status(400).json({ error: "Email already exists" });
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ error: "Email already exists" });
 
-  const hashed = await bcrypt.hash(password, 10);
-  const user = new User({ username, email, password: hashed });
-  await user.save();
-  res.json({ message: "✅ User registered successfully" });
+    const hashed = await bcrypt.hash(password, 10);
+    const user = new User({ username, email, password: hashed });
+    await user.save();
+    res.json({ message: "✅ 회원가입 성공" });
+  } catch (err) {
+    res.status(500).json({ error: "서버 오류" });
+  }
 });
 
 // ======== 로그인 ========
-app.post("/login", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) return res.status(400).json({ error: "User not found" });
@@ -112,19 +113,47 @@ app.post("/login", async (req, res) => {
     { expiresIn: "2h" }
   );
 
-  res.json({ message: "✅ Login success", token });
+  res.json({ message: "✅ 로그인 성공", token });
+});
+
+// ======== 행성 등록 ========
+app.post("/api/planets/create", authMiddleware, async (req, res) => {
+  const { name, description, imageUrl, price } = req.body;
+  const planet = new Planet({
+    name,
+    description,
+    imageUrl,
+    price,
+    isForSale: true,
+    owner: req.user.id,
+  });
+  await planet.save();
+  res.status(201).json({ message: "✅ 행성 등록 완료" });
+});
+
+// ======== 모든 행성 조회 ========
+app.get("/api/planets", async (req, res) => {
+  const planets = await Planet.find().populate("owner", "username");
+  res.json(planets);
 });
 
 // ======== RSA 키 로드 ========
-const PRIVATE_KEY = fs.readFileSync("./keys/private.pem", "utf8");
-const PUBLIC_KEY = fs.readFileSync("./keys/public.pem", "utf8");
+const PRIVATE_KEY_PATH = path.join(__dirname, "keys", "private.pem");
+const PUBLIC_KEY_PATH = path.join(__dirname, "keys", "public.pem");
+
+let PRIVATE_KEY = "";
+let PUBLIC_KEY = "";
+
+try {
+  PRIVATE_KEY = fs.readFileSync(PRIVATE_KEY_PATH, "utf8");
+  PUBLIC_KEY = fs.readFileSync(PUBLIC_KEY_PATH, "utf8");
+} catch (err) {
+  console.warn("⚠️ RSA 키 파일을 찾을 수 없습니다. keys/ 디렉토리를 확인하세요.");
+}
 
 // ======== 해시 및 서명 함수 ========
 function createHash(payload) {
-  return crypto
-    .createHash("sha256")
-    .update(JSON.stringify(payload))
-    .digest("hex");
+  return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
 function signData(hash) {
@@ -133,8 +162,8 @@ function signData(hash) {
   return signer.sign(PRIVATE_KEY, "base64");
 }
 
-// ======== 인증서 발급 (로그인 필요) ========
-app.post("/issue", authMiddleware, async (req, res) => {
+// ======== 인증서 발급 ========
+app.post("/api/certificates/issue", authMiddleware, async (req, res) => {
   const { assetType, assetId } = req.body;
 
   const certId = "CERT-" + Date.now();
@@ -148,19 +177,18 @@ app.post("/issue", authMiddleware, async (req, res) => {
   };
 
   const hash = createHash(payload);
-  const signature = signData(hash);
+  const signature = PRIVATE_KEY ? signData(hash) : "NO_SIGNATURE";
   const verifyUrl = `https://yourdomain.com/verify/${certId}`;
   const qr = await QRCode.toDataURL(verifyUrl);
 
   // PDF 생성
-  const certPath = path.join("certs", `${certId}.pdf`);
-  fs.mkdirSync("certs", { recursive: true });
+  const certDir = path.join(__dirname, "certs");
+  const certPath = path.join(certDir, `${certId}.pdf`);
+  fs.mkdirSync(certDir, { recursive: true });
+
   const doc = new PDFDocument();
   doc.pipe(fs.createWriteStream(certPath));
-
-  doc
-    .fontSize(20)
-    .text("LUNA EMBASSY - Certificate of Ownership", { align: "center" });
+  doc.fontSize(20).text("🌙 LUNA EMBASSY - Certificate of Ownership", { align: "center" });
   doc.moveDown();
   doc.fontSize(12).text(`Certificate ID: ${certId}`);
   doc.text(`Owner: ${req.user.username}`);
@@ -195,20 +223,16 @@ app.post("/issue", authMiddleware, async (req, res) => {
   });
 });
 
-// ======== 인증서 폴더 공개 ========
-app.use("/certs", express.static(path.join(process.cwd(), "certs")));
+// ======== 인증서 파일 공개 ========
+app.use("/certs", express.static(path.join(__dirname, "certs")));
 
-// ======== 서버 실행 ========
+// ======== 프론트엔드 정적 파일 (예: public 폴더) ========
+app.use(express.static(path.join(__dirname, "public")));
 
-// 루트 페이지 접속 시 로그인 페이지로 이동
+// ======== 기본 라우트 ========
 app.get("/", (req, res) => {
-  res.redirect("/login.html");
+  res.send("🌍 Universe Project + Luna Embassy Backend Server Running...");
 });
-app.get("/", (req, res) => res.redirect("/register.html"));
 
-
-app.listen(3000, () =>
-  console.log("🚀 Server running on http://localhost:3000")
-);
-
-app.use(express.static("public"));
+// ======== 서버 시작 ========
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
