@@ -21,7 +21,7 @@ import * as THREE from 'three';
 function Planet({ data, position }) {
   const meshRef = useRef();
   // 💡 백엔드의 `imageUrl` 필드 사용, 없으면 임시 텍스처 로드
-  const texture = useTexture(data.imageUrl || '/textures/planet_default.jpg');
+  const texture = useTexture(data.imageUrl || '/textures/planet.jpg');
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -67,7 +67,7 @@ function Star({ data, position }) {
 /** 🌀 블랙홀 (Blackhole) 컴포넌트 */
 function Blackhole({ data, position }) {
   const diskRef = useRef();
-  const texture = useTexture('/textures/disk.png'); // 💡 public/textures/disk.png (원반 모양 텍스처)
+  const texture = useTexture('/textures/blackhole.mp4'); // 💡 public/textures/disk.png (원반 모양 텍스처)
   
   useFrame((state, delta) => {
     if (diskRef.current) {
