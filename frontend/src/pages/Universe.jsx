@@ -110,7 +110,7 @@ function Galaxy({ data, position }) {
 // -------------------------------------------------------------
 function NebulaSkybox() {
   // 💡 public/textures/nebula.jpg (360도 파노라마 성운) 이미지가 필요합니다.
-  const texture = useTexture('/textures/nebula.png'); 
+  const texture = useTexture('/textures/nebula.jpg'); 
   return (
     <mesh>
       <sphereGeometry args={[500, 60, 40]} />
