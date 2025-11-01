@@ -1,10 +1,7 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
-// 💡 [오류 1 수정] .jsx 확장자 "추가" (경로를 명확하게)
 import { useAuth } from '../context/AuthContext.jsx'; 
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-// 💡 [숨겨진 오류 수정] useTexture가 drei에서 import되도록 추가
 import { OrbitControls, Stars, Text, Html, useTexture, Plane, Sphere, Torus, useVideoTexture } from '@react-three/drei';
-// 💡 [오류 2 원인] 이 라이브러리가 "설치"되지 않았습니다.
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
@@ -158,7 +155,7 @@ export default function Universe() {
           <ambientLight intensity={1.0} />
           
           {/* 💡 [수정] "벽지"(NebulaSkybox) 대신 "3D 별"을 사용! */}
-          <Stars radius={300} depth={50} count={10000} factor={10} saturation={1} fade speed={1} />
+          <Stars radius={300} depth={50} count={10000} factor={20} saturation={1} fade speed={1} />
           
           {/* 2. 모든 천체 렌더링 */}
           {!isLoading && !error && (
