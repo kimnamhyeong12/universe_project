@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
-// 💡 [오류 1 수정] .jsx 확장자 제거 (Vite가 자동으로 찾도록 함)
+// 💡 [오류 1 수정] .jsx 확장자 "제거" (Vite가 자동으로 찾도록 함)
 import { useAuth } from '../context/AuthContext'; 
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+// 💡 [숨겨진 오류 수정] useTexture가 drei에서 import되도록 추가
 import { OrbitControls, Stars, Text, Html, useTexture, Plane, Sphere, Torus } from '@react-three/drei';
+// 💡 [오류 2 수정] @react-three/postprocessing은 npm install이 "반드시" 필요합니다!
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
@@ -21,7 +23,7 @@ import * as THREE from 'three';
 function Planet({ data, position }) {
   const meshRef = useRef();
   // 💡 백엔드의 `imageUrl` 필드 사용, 없으면 임시 텍스처 로드
-  const texture = useTexture(data.imageUrl || '/textures/planet.jpg');
+  const texture = useTexture(data.imageUrl || '/textures/planet_default.jpg');
 
   useFrame((state, delta) => {
     if (meshRef.current) {
@@ -182,7 +184,7 @@ export default function Universe() {
     <div className="w-screen h-screen bg-black text-white relative">
       {/* 1. 3D 캔버스 */}
       <Canvas camera={{ position: [0, 0, 50], fov: 75 }}>
-        <Suspense fallback={null}>
+        <Suspense fallback={<Html center><div className="text-white text-2xl">Loading...</div></Html>}>
           <ambientLight intensity={1.0} />
           
           {/* 1. 성운 "벽지" */}
