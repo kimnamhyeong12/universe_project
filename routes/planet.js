@@ -6,7 +6,13 @@ const router = express.Router();
 
 // 모든 행성 조회
 router.get("/", async (req, res) => {
-  const planets = await Planet.find().populate("owner", "username");
+  const { galaxy } = req.query; // 👈 2. 쿼리 파라미터 받기
+  let filter = {};
+  if (galaxy) {
+    filter.galaxy = galaxy; // 👈 3. 필터 객체 만들기
+  }
+  // 4. 필터로 DB 조회
+  const planets = await Planet.find(filter).populate("owner", "username"); 
   res.json(planets);
 });
 
