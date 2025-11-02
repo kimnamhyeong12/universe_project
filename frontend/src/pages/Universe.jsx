@@ -173,7 +173,7 @@ export default function Universe() {
 
         {/* 3. 빛나는 효과 (항성 등을 빛나게 함) */}
         <EffectComposer>
-          <Bloom luminanceThreshold={0.5} intensity={1.5} />
+          <Bloom luminanceThreshold={0.5} intensity={2.0} />
         </EffectComposer>
       </Canvas>
 
