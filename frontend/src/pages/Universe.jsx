@@ -45,7 +45,7 @@ function Star({ data, position }) {
   return (
     <group position={position}>
       <Sphere args={[2.5, 32, 32]}>
-        <meshStandardMaterial map={texture} emissive="yellow" emissiveIntensity={2} />
+        <meshStandardMaterial map={texture} emissive="yellow" emissiveIntensity={5} />
       </Sphere>
       <Text position={[0, -3, 0]} fontSize={0.4} color="yellow" anchorX="center">
         {data.name}
