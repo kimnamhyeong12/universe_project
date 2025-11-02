@@ -1,52 +1,33 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
-// 💡 [오류 1 수정] .jsx 확장자 "제거" (Vite가 자동으로 찾도록 함)
+// 💡 [오류 1 수정] .jsx 확장자 "제거"
 import { useAuth } from '../context/AuthContext'; 
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text, Html, useTexture, Plane, Sphere, Torus, useVideoTexture } from '@react-three/drei';
+// 💡 [수정] "항상 카메라를 보는" <Billboard /> 훅 추가!
+import { OrbitControls, Stars, Text, Html, useTexture, Plane, Sphere, Torus, useVideoTexture, Billboard } from '@react-three/drei';
 // 💡 [오류 2 원인] 이 라이브러리가 "설치"되지 않았습니다.
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 // =============================================================
-// 💡 [Phase 2] 3D 우주 공간 (토성 고리 "합체" 기능 추가)
-// - 1. `<SaturnRings />` 컴포넌트를 "새로" 만듭니다.
-// - 2. `<Planet />` 컴포넌트가 `data.name`을 확인하고,
-// - 3. "토성"일 경우에만 `<SaturnRings />`를 렌더링하여 "합체"시킵니다.
+// 💡 [Phase 2-B] "어색함" 수정 (1차)
+// - 1. [조명 수정] <ambientLight>를 낮추고, <Star>가 <pointLight>를 뿜도록 수정
+// - 2. [가짜 3D 수정] <Galaxy>가 <Plane>(평면) 대신 <Billboard>(카메라 응시)를 쓰도록 수정
 // =============================================================
 
 // -------------------------------------------------------------
 // 3D 천체 컴포넌트들
 // -------------------------------------------------------------
 
-/** * 💡 [신규] 토성의 "고리" 전용 컴포넌트
- */
-function SaturnRings() {
-  // 💡 [필수!] /public/textures/saturn_ring.png (배경 투명) 파일이 있어야 합니다.
-  const texture = useTexture('/textures/saturn_ring.png');
-  
-  return (
-    // 💡 얇은 "판" (Plane)을 90도 눕히고, 텍스처를 씌웁니다.
-    <Plane args={[8, 8]} rotation={[Math.PI / 2.5, 0, 0]}>
-      <meshBasicMaterial 
-        map={texture} 
-        transparent={true} // 💡 PNG의 투명한 부분을 "구멍"으로 렌더링 (필수!)
-        side={THREE.DoubleSide} // 💡 앞/뒷면 모두 보이게
-      />
-    </Plane>
-  );
-}
-
-/** 🪐 행성 (Planet) 컴포넌트 - 💡 "고리" 기능 추가 */
+/** 🪐 행성 (Planet) 컴포넌트 */
 function Planet({ data, position }) {
   const meshRef = useRef();
   const texture = useTexture(data.imageUrl || '/textures/planet_default.jpg');
   
-  // 💡 [핵심] 이 행성이 "토성"인지 확인합니다.
   const isSaturn = data.name.toLowerCase().includes('saturn');
 
   useFrame((state, delta) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.1; // 자전
+        meshRef.current.rotation.y += delta * 0.1; 
     }
   });
 
@@ -55,18 +36,15 @@ function Planet({ data, position }) {
   };
 
   return (
-    // 💡 <group>이 "투명 상자" 역할을 합니다. (행성 + 고리 + 텍스트)
     <group position={position} onClick={handleClick}>
-      
-      {/* 1. 행성 "본체" (찰흙 + 시트지 1) */}
       <Sphere ref={meshRef} args={[1.5, 32, 32]}>
+        {/* 💡 [조명 수정] 
+            이제 meshStandardMaterial이 "태양"의 <pointLight>에 반응하여
+            "밝은 면"과 "어두운 면(그림자)"이 생깁니다!
+        */}
         <meshStandardMaterial map={texture} />
       </Sphere>
-      
-      {/* 💡 2. "토성"일 경우에만 "고리" 렌더링! (찰흙 2 + 시트지 2) */}
       {isSaturn && <SaturnRings />}
-
-      {/* 3. 행성 이름 */}
       <Text position={[0, -2.5, 0]} fontSize={0.4} color="white" anchorX="center">
         {data.name}
       </Text>
@@ -74,14 +52,36 @@ function Planet({ data, position }) {
   );
 }
 
-/** ⭐ 항성 (Star) 컴포넌트 */
+/** * 💡 [신규] 토성의 "고리" 전용 컴포넌트
+ */
+function SaturnRings() {
+  const texture = useTexture('/textures/saturn_ring.png');
+  return (
+    <Plane args={[8, 8]} rotation={[Math.PI / 2.5, 0, 0]}>
+      <meshBasicMaterial 
+        map={texture} 
+        transparent={true} 
+        side={THREE.DoubleSide} 
+      />
+    </Plane>
+  );
+}
+
+/** ⭐ 항성 (Star) 컴포넌트 - 💡 [조명 수정] */
 function Star({ data, position }) {
-  const texture = useTexture('/textures/sun.jpg'); 
+  const texture = useTexture(data.imageUrl || '/textures/sun.jpg'); 
   return (
     <group position={position}>
       <Sphere args={[2.5, 32, 32]}>
         <meshStandardMaterial map={texture} emissive="yellow" emissiveIntensity={2} />
       </Sphere>
+      
+      {/* 💡 [조명 수정] "진짜" 조명 추가!
+          이 항성이 주변의 다른 천체들(행성)을 비추도록 "전구"를 설치합니다.
+          intensity={200} (빛의 세기), distance={100} (빛의 도달 거리)
+      */}
+      <pointLight intensity={200} distance={100} color="#FFD700" />
+
       <Text position={[0, -3, 0]} fontSize={0.4} color="yellow" anchorX="center">
         {data.name}
       </Text>
@@ -92,7 +92,7 @@ function Star({ data, position }) {
 /** 🌀 블랙홀 (Blackhole) 컴포넌트 */
 function Blackhole({ data, position }) {
   const diskRef = useRef();
-  const texture = useVideoTexture('/textures/blackhole.mp4');
+  const texture = useVideoTexture(data.imageUrl || '/textures/blackhole.mp4');
   useFrame((state, delta) => {
     if (diskRef.current) {
         diskRef.current.rotation.z += delta * 0.5; 
@@ -103,9 +103,12 @@ function Blackhole({ data, position }) {
       <Sphere args={[2, 32, 32]}>
         <meshBasicMaterial color="black" />
       </Sphere>
-      <Plane ref={diskRef} args={[8, 8]} rotation={[Math.PI / 2, 0, 0]}>
-        <meshBasicMaterial map={texture} transparent={true} side={THREE.DoubleSide} />
-      </Plane>
+      {/* 💡 "가짜 3D" 수정: 블랙홀 원반도 <Billboard>로 감싸서 항상 카메라를 보게 함 */}
+      <Billboard>
+        <Plane ref={diskRef} args={[8, 8]} rotation={[Math.PI / 2, 0, 0]}>
+          <meshBasicMaterial map={texture} transparent={true} side={THREE.DoubleSide} />
+        </Plane>
+      </Billboard>
       <Text position={[0, -5, 0]} fontSize={0.4} color="red" anchorX="center">
         {data.name}
       </Text>
@@ -113,16 +116,21 @@ function Blackhole({ data, position }) {
   );
 }
 
-/** 🌌 은하 (Galaxy) 컴포넌트 */
+/** 🌌 은하 (Galaxy) 컴포넌트 - 💡 [가짜 3D 수정] */
 function Galaxy({ data, position }) {
-  const texture = useTexture('/textures/galaxy.png'); 
+  const texture = useTexture(data.imageUrl || '/textures/galaxy.png'); 
   return (
-    <Plane args={[8, 8]} position={position}>
-      <meshBasicMaterial map={texture} transparent={true} side={THREE.DoubleSide} />
+    // 💡 [가짜 3D 수정] <Plane> 대신 <Billboard> 사용!
+    // 이제 이 은하 "사진"은 카메라가 어디로 가든 "항상" 정면을 쳐다봅니다.
+    // "종이 쪼가리"처럼 보이는 문제가 90% 해결됩니다.
+    <Billboard position={position}>
+      <Plane args={[8, 8]}>
+        <meshBasicMaterial map={texture} transparent={true} side={THREE.DoubleSide} />
+      </Plane>
       <Text position={[0, -5, 0]} fontSize={0.4} color="#00ffff" anchorX="center">
         {data.name}
       </Text>
-    </Plane>
+    </Billboard>
   );
 }
 
@@ -179,12 +187,12 @@ export default function Universe() {
     <div className="w-screen h-screen bg-black text-white relative">
       <Canvas camera={{ position: [0, 0, 50], fov: 75 }}>
         <Suspense fallback={<Html center><div className="text-white text-2xl">Loading...</div></Html>}>
-          <ambientLight intensity={1.0} />
+          
+          {/* 💡 [조명 수정] "병원 형광등"을 끄고, "은은한" 기본 조명만 남김 */}
+          <ambientLight intensity={0.1} /> 
+          
           <Stars radius={300} depth={50} count={10000} factor={10} saturation={1} fade speed={1} />
           
-          {/* 💡 렌더링 로직은 수정할 필요가 없습니다. 
-            `Planet` 컴포넌트가 알아서 "토성"을 구별하고 "고리"를 렌더링합니다!
-          */}
           {!isLoading && !error && (
             <>
               {galaxies.map(d => <Galaxy key={d._id} data={d} position={getRandomPosition()} />)}
