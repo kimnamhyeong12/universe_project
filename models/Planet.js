@@ -7,6 +7,7 @@ const PlanetSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   price: Number,
   isForSale: Boolean,
+  galaxy: { type: mongoose.Schema.Types.ObjectId, ref: 'Galaxy' }
 });
 
 module.exports = mongoose.model("Planet", PlanetSchema);
