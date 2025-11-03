@@ -80,7 +80,7 @@ function Star({ data, position }) {
           이 항성이 주변의 다른 천체들(행성)을 비추도록 "전구"를 설치합니다.
           intensity={200} (빛의 세기), distance={100} (빛의 도달 거리)
       */}
-      <pointLight intensity={200} distance={100} color="#FFD700" />
+      <pointLight intensity={300} distance={500} color="#FFD700" />
 
       <Text position={[0, -3, 0]} fontSize={0.4} color="yellow" anchorX="center">
         {data.name}
