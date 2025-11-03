@@ -57,6 +57,8 @@ function SaturnRings() {
 
 /* ----------------------------- Planet (월드좌표 전달) ----------------------------- */
 function Planet({ data, onSelect }) {
+  // 파일 상단 어딘가
+  const ORBIT_SPEED_MULT = 3.5; // ← 1.0(기본)보다 크면 더 빨라짐
   const planetRef = useRef();
   const texture = useTexture(data.imageUrl || "/textures/planet_default.jpg");
   const orbitRadius = data.orbitRadius || 20 + Math.random() * 10;
@@ -66,7 +68,7 @@ function Planet({ data, onSelect }) {
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    const a = orbitOffset.current + t * orbitSpeed;
+    const a = orbitOffset.current + t * orbitSpeed * ORBIT_SPEED_MULT;
     const x = Math.cos(a) * orbitRadius;
     const z = Math.sin(a) * orbitRadius;
     if (planetRef.current) {
