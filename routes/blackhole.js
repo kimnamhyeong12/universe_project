@@ -1,26 +1,19 @@
-const express = require('express');
+// 📁 routes/blackhole.js
+const express = require("express");
 const router = express.Router();
-const Blackhole = require('../models/Blackhole');
+const Blackhole = require("../models/Blackhole");
 
-// 모든 블랙홀 조회
-router.get('/', async (req, res) => {
+// ✅ 블랙홀 전체 조회 (GET /api/blackholes)
+router.get("/", async (req, res) => {
   try {
-    const blackholes = await Blackhole.find().populate('owner', 'username').populate('galaxy', 'name');
+    const blackholes = await Blackhole.find()
+      .populate("owner") // 소유자 정보 포함
+      .sort({ createdAt: -1 }); // 최신순 정렬
+
     res.json(blackholes);
   } catch (err) {
-    res.status(500).json({ error: '블랙홀 조회 실패' });
-  }
-});
-
-// 블랙홀 등록
-router.post('/create', async (req, res) => {
-  try {
-    const { name, mass, radius, description, galaxy, owner } = req.body;
-    const blackhole = new Blackhole({ name, mass, radius, description, galaxy, owner, isForSale: true });
-    await blackhole.save();
-    res.status(201).json({ message: '🌀 블랙홀 등록 완료' });
-  } catch (err) {
-    res.status(500).json({ error: '블랙홀 등록 실패' });
+    console.error("❌ Blackhole GET 오류:", err);
+    res.status(500).json({ error: "서버 에러" });
   }
 });
 
