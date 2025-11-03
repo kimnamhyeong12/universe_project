@@ -1,15 +1,22 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const StarSchema = new mongoose.Schema({
-  name: String,
-  type: String,              // 별 종류 (예: 적색왜성, 초거성 등)
-  mass: Number,              // 질량
-  radius: Number,            // 반지름
-  temperature: Number,       // 표면 온도
-  galaxy: { type: mongoose.Schema.Types.ObjectId, ref: 'Galaxy' },
+const starSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  type: String,
+  mass: Number,
+  radius: Number,
+  temperature: Number,
   description: String,
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  isForSale: Boolean
-});
+  imageUrl: String,
+  position: { // 은하 내 위치
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+  galaxy: { type: mongoose.Schema.Types.ObjectId, ref: "Galaxy" }, // ⭐ 어느 은하에 속하는지
+  isForSale: { type: Boolean, default: true },
+  price: { type: Number, default: 0 },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+}, { timestamps: true });
 
-module.exports = mongoose.model('Star', StarSchema);
+module.exports = mongoose.model("Star", starSchema);

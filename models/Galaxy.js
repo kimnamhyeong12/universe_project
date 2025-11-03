@@ -1,14 +1,17 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const GalaxySchema = new mongoose.Schema({
-  name: String,
+const galaxySchema = new mongoose.Schema({
+  name: { type: String, required: true },
   description: String,
-  size: Number,              // 직경 (광년 단위 등)
-  numberOfStars: Number,     // 포함된 별의 수
-  discoveredBy: String,
-  discoveredAt: Date,
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  isForSale: Boolean
-});
+  imageUrl: String,
+  position: { // 은하의 우주상 위치
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+  isForSale: { type: Boolean, default: true },
+  price: { type: Number, default: 0 },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+}, { timestamps: true });
 
-module.exports = mongoose.model('Galaxy', GalaxySchema);
+module.exports = mongoose.model("Galaxy", galaxySchema);

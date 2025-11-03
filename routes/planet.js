@@ -1,34 +1,27 @@
+// 📁 routes/planet.js
 const express = require("express");
-const Planet = require("../models/Planet");
-const { authMiddleware } = require("../utils/authMiddleware");
-
 const router = express.Router();
+const Planet = require("../models/Planet");
 
-// 모든 행성 조회
+// ✅ 모든 행성 조회 (선택적 필터: star=ID)
 router.get("/", async (req, res) => {
-  const { galaxy } = req.query; // 👈 2. 쿼리 파라미터 받기
-  let filter = {};
-  if (galaxy) {
-    filter.galaxy = galaxy; // 👈 3. 필터 객체 만들기
-  }
-  // 4. 필터로 DB 조회
-  const planets = await Planet.find(filter).populate("owner", "username"); 
-  res.json(planets);
-});
+  try {
+    const { star } = req.query;
 
-// 행성 등록
-router.post("/create", authMiddleware, async (req, res) => {
-  const { name, description, imageUrl, price } = req.body;
-  const planet = new Planet({
-    name,
-    description,
-    imageUrl,
-    price,
-    isForSale: true,
-    owner: req.user.id,
-  });
-  await planet.save();
-  res.status(201).json({ message: "✅ 행성 등록 완료" });
+    const filter = {};
+    if (star) {
+      filter.star = star; // /api/planets?star=...
+    }
+
+    const planets = await Planet.find(filter)
+      .populate("star owner")
+      .sort({ createdAt: -1 });
+
+    res.json(planets);
+  } catch (err) {
+    console.error("❌ Planet GET 오류:", err);
+    res.status(500).json({ error: "서버 에러" });
+  }
 });
 
 module.exports = router;

@@ -1,13 +1,21 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const BlackholeSchema = new mongoose.Schema({
-  name: String,
-  mass: Number,              // 질량
-  radius: Number,            // 반지름
+const blackholeSchema = new mongoose.Schema({
+  name: { type: String, required: true },
   description: String,
-  galaxy: { type: mongoose.Schema.Types.ObjectId, ref: 'Galaxy' },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  isForSale: Boolean
-});
+  imageUrl: String,
 
-module.exports = mongoose.model('Blackhole', BlackholeSchema);
+  galaxy: { type: mongoose.Schema.Types.ObjectId, ref: "Galaxy" },
+
+  position: { // 은하 내 위치
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+
+  isForSale: { type: Boolean, default: true },
+  price: { type: Number, default: 0 },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+}, { timestamps: true });
+
+module.exports = mongoose.model("Blackhole", blackholeSchema);
