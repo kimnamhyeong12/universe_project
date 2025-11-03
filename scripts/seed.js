@@ -1,4 +1,3 @@
-// 📁 scripts/seed.js
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
@@ -43,29 +42,37 @@ async function seedData() {
     await Galaxy.deleteMany();
     await Blackhole.deleteMany();
 
-    // 🪐 행성 데이터 (임시 텍스처 사용)
+    // 🪐 [수정] 행성 데이터 (Solar System Scope 텍스처 사용!)
     const planets = [
-      { name: "테스트 행성 1", imageUrl: "/textures/planet_default.jpg" },
-      { name: "테스트 행성 2", imageUrl: "/textures/planet_default.jpg" },
-      { name: "테스트 행성 3", imageUrl: "/textures/planet_default.jpg" },
+      { 
+        name: "Mars", 
+        imageUrl: "/textures/mars.jpg", // 💡 mars.jpg
+        description: "D-Lab 픽셀 아트 행성 (테스트)"
+      },
+      { 
+        name: "Jupiter", 
+        imageUrl: "/textures/jupiter.jpg", // 💡 jupiter.jpg
+        description: "태양계에서 가장 큰 가스 행성"
+      },
+      { 
+        name: "Saturn", 
+        imageUrl: "/textures/saturn.jpg", // 💡 saturn.jpg
+        description: "아름다운 고리를 가진 행성"
+      },
     ].map((p) => ({
       ...p,
-      description: `${p.name}은 임시로 생성된 행성입니다.`,
       price: 1000,
       isForSale: true,
       owner: ownerId,
     }));
 
-    // ⭐ 항성 (태양)
+    // ⭐ [수정] 항성 (태양)
     const stars = [
       {
-        name: "태양",
+        name: "태양 (Sol)",
         type: "G형 주계열성",
-        mass: 1.989e30,
-        radius: 696340,
-        temperature: 5778,
-        description: "우리 태양계의 중심별",
-        imageUrl: "/textures/star.jpg",
+        // 💡 [수정] "star.jpg" 대신 "sun.jpg"를 사용하도록 "메뉴판" 수정!
+        imageUrl: "/textures/sun.jpg", 
         isForSale: false,
         owner: ownerId,
         galaxy: null,
@@ -76,8 +83,7 @@ async function seedData() {
     const galaxies = [
       {
         name: "안드로메다",
-        description: "가장 가까운 대형 은하",
-        imageUrl: "/textures/galaxy.png",
+        imageUrl: "/textures/galaxy.png", 
         isForSale: true,
         owner: ownerId,
       },
@@ -87,8 +93,7 @@ async function seedData() {
     const blackholes = [
       {
         name: "궁수자리 A*",
-        description: "우리 은하 중심에 있는 초대질량 블랙홀",
-        imageUrl: "/textures/blackhole.mp4",
+        imageUrl: "/textures/blackhole.mp4", 
         isForSale: true,
         owner: ownerId,
       },
@@ -97,11 +102,11 @@ async function seedData() {
     // ✅ 데이터 저장
     await Planet.insertMany(planets);
     const savedGalaxies = await Galaxy.insertMany(galaxies);
-    stars[0].galaxy = savedGalaxies[0]._id;
+    stars[0].galaxy = savedGalaxies[0]._id; 
     await Star.insertMany(stars);
-    await Blackhole.insertMany(blackholes);
+    await Blackhole.insertMany(blackholes); 
 
-    console.log("✅ Seed 데이터 삽입 완료");
+    console.log("✅ Seed 데이터 삽입 완료 (Sun, Mars, Jupiter, Saturn 추가!)");
   } catch (err) {
     console.error("❌ Seed 중 오류:", err);
   } finally {
@@ -110,3 +115,4 @@ async function seedData() {
 }
 
 seedData();
+
