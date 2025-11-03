@@ -13,8 +13,10 @@
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
+    "konva": "^10.0.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-konva": "^19.2.0",
     "three": "^0.181.0"
   },
   "devDependencies": {
