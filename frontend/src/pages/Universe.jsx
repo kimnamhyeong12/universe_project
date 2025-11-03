@@ -55,38 +55,43 @@ function SaturnRings() {
   );
 }
 
-/* ----------------------------- Planet (월드좌표 전달) ----------------------------- */
-function Planet({ data, onSelect }) {
+/* ----------------------------- Planet (공전 정지 + 자전 유지) ----------------------------- */
+function Planet({ data, onSelect, freezeOrbit = false }) {
   // 파일 상단 어딘가
-  const ORBIT_SPEED_MULT = 3.5; // ← 1.0(기본)보다 크면 더 빨라짐
+  const ORBIT_MULT = 2.5; // 공전 배속
+  const SPIN_MULT  = 1.4; // 자전 배속
   const planetRef = useRef();
   const texture = useTexture(data.imageUrl || "/textures/planet_default.jpg");
-  const orbitRadius = data.orbitRadius || 20 + Math.random() * 10;
-  const orbitSpeed  = data.orbitSpeed  || 0.05 + Math.random() * 0.02;
-  const orbitOffset = useRef(Math.random() * Math.PI * 2);
-  const isSaturn = (data.name || "").toLowerCase().includes("saturn");
 
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    const a = orbitOffset.current + t * orbitSpeed * ORBIT_SPEED_MULT;
-    const x = Math.cos(a) * orbitRadius;
-    const z = Math.sin(a) * orbitRadius;
+  // delta 기반 공전/자전
+  const angleRef = useRef(Math.random() * Math.PI * 2);
+  const orbitRadius = data.orbitRadius || 20 + Math.random() * 10;
+  const orbitSpeed  = data.orbitSpeed  || 2.5;  // 초당 라디안
+  const spinSpeed   = 1.7;                      // 자전 속도(초당 라디안)
+
+  useFrame((_, delta) => {
+    if (!freezeOrbit) angleRef.current += orbitSpeed * ORBIT_MULT * delta; // 공전(정지 가능)
+    const x = Math.cos(angleRef.current) * orbitRadius;
+    const z = Math.sin(angleRef.current) * orbitRadius;
+
     if (planetRef.current) {
       planetRef.current.position.set(x, 0, z);
-      planetRef.current.rotation.y += 0.01;
+      planetRef.current.rotation.y += spinSpeed * SPIN_MULT * delta;     // ✅ 자전은 항상
     }
   });
 
   const handleClick = () => {
     const world = new THREE.Vector3();
-    planetRef.current?.getWorldPosition(world);         // ✅ 월드 좌표
+    planetRef.current?.getWorldPosition(world);
     onSelect({
       ...data,
       type: "planet",
-      positionRef: planetRef,                            // 추적용 ref
-      worldPos: world.clone(),                           // ✅ 월드 좌표 저장
+      positionRef: planetRef,
+      worldPos: world.clone(),
     });
   };
+
+  const isSaturn = (data.name || "").toLowerCase().includes("saturn");
 
   return (
     <group onClick={handleClick}>
@@ -292,16 +297,15 @@ function DetailSlide({ open, data, onClose }) {
   );
 }
 
-/* ----------------------------- Camera Controller (스무스 줌인 + 부드러운 추적) ----------------------------- */
-function CameraController({ target, onArrived }) {
+/* ----------------------------- Camera Controller (스무스 줌인 + 추적 on/off) ----------------------------- */
+function CameraController({ target, track = true, onArrived }) {
   const controlsRef = useRef();
   const { camera } = useThree();
 
-  const followingRef   = useRef(false);                 // 초기 줌인 끝났는가?
-  const lastCamPosRef  = useRef(new THREE.Vector3());   // 보간용 누적 카메라 위치
-  const offsetRef      = useRef(new THREE.Vector3());   // 대상 대비 카메라 오프셋 유지
+  const followingRef  = useRef(false);
+  const lastCamPosRef = useRef(new THREE.Vector3());
+  const offsetRef     = useRef(new THREE.Vector3());
 
-  // 대상 선택 시: 애니메이션으로 접근(true). 끝나면 추적 시작.
   useEffect(() => {
     const controls = controlsRef.current;
     if (!controls) return;
@@ -312,62 +316,58 @@ function CameraController({ target, onArrived }) {
       return;
     }
 
-    // 대상 월드 좌표
     const dest = target.positionRef?.current
       ? target.positionRef.current.getWorldPosition(new THREE.Vector3())
-      : (target.worldPos ? target.worldPos.clone() : new THREE.Vector3(0, 0, 0));
+      : (target.worldPos ? target.worldPos.clone() : new THREE.Vector3());
 
     const baseDist =
       target.type === "star" ? 20 :
       target.type === "planet" ? 12 :
       target.type === "blackhole" ? 14 : 12;
 
-    // 0벡터 방지: 현 카메라 → 대상 방향
     let dir = camera.position.clone().sub(dest);
     if (dir.lengthSq() < 1e-6) dir = new THREE.Vector3(0, 0, 1);
     dir.normalize();
 
     const arriveCamPos = dest.clone().add(dir.multiplyScalar(baseDist));
 
-    // 초기 줌인 동안 추적 OFF
     followingRef.current = false;
     lastCamPosRef.current.copy(arriveCamPos);
-    offsetRef.current.copy(arriveCamPos.clone().sub(dest)); // 오프셋 기억
+    offsetRef.current.copy(arriveCamPos.clone().sub(dest));
 
     controls.enabled = false;
     controls
       .setLookAt(
         arriveCamPos.x, arriveCamPos.y, arriveCamPos.z,
         dest.x, dest.y, dest.z,
-        true // ✅ 스무스 애니메이션
+        true
       )
       .then(() => {
         controls.enabled = true;
-        followingRef.current = true;                      // ✅ 이제부터 추적 시작
+        followingRef.current = true;
         onArrived && onArrived();
       });
   }, [target, camera, onArrived]);
 
-  // 프레임별 추적(행성처럼 움직이는 대상)
   useFrame(() => {
     const controls = controlsRef.current;
     if (!controls || !followingRef.current || !target) return;
+    if (!track) return; // 상세 패널 열림 등 → 추적 off
 
     const p = target.positionRef?.current
       ? target.positionRef.current.getWorldPosition(new THREE.Vector3())
       : (target.worldPos ? target.worldPos : null);
     if (!p) return;
 
-    // 고정 오프셋을 유지하면서 부드럽게 보간
     const desiredCam = p.clone().add(offsetRef.current);
-    lastCamPosRef.current.lerp(desiredCam, 0.08); // 0.05~0.15로 취향 조절
+    lastCamPosRef.current.lerp(desiredCam, 0.08);
 
     controls.setLookAt(
       lastCamPosRef.current.x,
       lastCamPosRef.current.y,
       lastCamPosRef.current.z,
       p.x, p.y, p.z,
-      false // 프레임 업데이트는 즉시
+      false
     );
   });
 
@@ -378,8 +378,8 @@ function CameraController({ target, onArrived }) {
 export default function Universe() {
   const auth = useAuth();
   const [galaxies, setGalaxies] = useState([]);
-  const [stars, setStars]       = useState([]);
-  const [planets, setPlanets]   = useState([]);
+  const [stars, setStars] = useState([]);
+  const [planets, setPlanets] = useState([]);
   const [blackholes, setBlackholes] = useState([]);
   const [selected, setSelected] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
@@ -426,21 +426,32 @@ export default function Universe() {
           {!isLoading && !error && (
             <>
               {galaxies.map(d => (
-                <Galaxy key={d._id} data={d} position={randomPos()} onSelect={setSelected} />
+                <Galaxy key={d._id} data={d} position={randomPos()} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
               ))}
               {stars.map(d => (
-                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={setSelected} />
+                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
               ))}
               {planets.map(d => (
-                <Planet key={d._id} data={d} onSelect={setSelected} />
+                <Planet
+                  key={d._id}
+                  data={d}
+                  onSelect={(item) => { setSelected(item); setOpenDetail(true); }}
+                  // ✅ 선택된 행성 + 상세패널 열림이면 공전 정지
+                  freezeOrbit={openDetail && selected?._id === d._id}
+                />
               ))}
               {blackholes.map(d => (
-                <Blackhole key={d._id} data={d} position={randomPos()} onSelect={setSelected} />
+                <Blackhole key={d._id} data={d} position={randomPos()} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
               ))}
             </>
           )}
 
-          <CameraController target={selected} onArrived={() => setOpenDetail(true)} />
+          {/* ✅ 상세 패널 열릴 땐 행성 추적 off → 지터 방지 */}
+          <CameraController
+            target={selected}
+            track={!(selected?.type === "planet" && openDetail)}
+            onArrived={() => setOpenDetail(true)}
+          />
         </Suspense>
 
         <EffectComposer>
