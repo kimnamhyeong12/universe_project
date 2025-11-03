@@ -3,8 +3,7 @@ import React, { useRef, useState, useEffect, Suspense } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  Stars, Text, Html, useTexture, Plane, Sphere,
-  useVideoTexture, Billboard, CameraControls,
+  Stars, Text, Html, useTexture, Plane, Sphere, CameraControls,
 } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -57,26 +56,25 @@ function SaturnRings() {
 
 /* ----------------------------- Planet (공전 정지 + 자전 유지) ----------------------------- */
 function Planet({ data, onSelect, freezeOrbit = false }) {
-  // 파일 상단 어딘가
   const ORBIT_MULT = 2.5; // 공전 배속
   const SPIN_MULT  = 1.4; // 자전 배속
+
   const planetRef = useRef();
   const texture = useTexture(data.imageUrl || "/textures/planet_default.jpg");
 
-  // delta 기반 공전/자전
   const angleRef = useRef(Math.random() * Math.PI * 2);
   const orbitRadius = data.orbitRadius || 20 + Math.random() * 10;
   const orbitSpeed  = data.orbitSpeed  || 2.5;  // 초당 라디안
-  const spinSpeed   = 1.7;                      // 자전 속도(초당 라디안)
+  const spinSpeed   = 1.7;                      // 자전(초당 라디안)
 
   useFrame((_, delta) => {
-    if (!freezeOrbit) angleRef.current += orbitSpeed * ORBIT_MULT * delta; // 공전(정지 가능)
+    if (!freezeOrbit) angleRef.current += orbitSpeed * ORBIT_MULT * delta;
     const x = Math.cos(angleRef.current) * orbitRadius;
     const z = Math.sin(angleRef.current) * orbitRadius;
 
     if (planetRef.current) {
       planetRef.current.position.set(x, 0, z);
-      planetRef.current.rotation.y += spinSpeed * SPIN_MULT * delta;     // ✅ 자전은 항상
+      planetRef.current.rotation.y += spinSpeed * SPIN_MULT * delta; // 자전은 항상
     }
   });
 
@@ -125,52 +123,6 @@ function Star({ data, position = [0, 0, 0], onSelect }) {
         {data.name}
       </Text>
     </group>
-  );
-}
-
-/* ----------------------------- Blackhole ----------------------------- */
-function Blackhole({ data, position, onSelect }) {
-  const diskRef = useRef();
-  const texture = useVideoTexture(data.imageUrl || "/textures/blackhole.mp4", {
-    start: true, loop: true, muted: true, crossOrigin: "anonymous",
-  });
-  useFrame((_, d) => {
-    if (diskRef.current) diskRef.current.rotation.z += d * 0.5;
-  });
-
-  return (
-    <group
-      position={position}
-      onClick={() => onSelect({ ...data, type: "blackhole", worldPos: new THREE.Vector3(...position) })}
-    >
-      <Sphere args={[2, 32, 32]}><meshBasicMaterial color="black" /></Sphere>
-      <Billboard>
-        <Plane ref={diskRef} args={[8, 8]}>
-          <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
-        </Plane>
-      </Billboard>
-      <Text position={[0, -5, 0]} fontSize={0.45} color="red" anchorX="center">
-        {data.name}
-      </Text>
-    </group>
-  );
-}
-
-/* ----------------------------- Galaxy ----------------------------- */
-function Galaxy({ data, position, onSelect }) {
-  const texture = useTexture(data.imageUrl || "/textures/galaxy.png");
-  return (
-    <Billboard
-      position={position}
-      onClick={() => onSelect({ ...data, type: "galaxy", worldPos: new THREE.Vector3(...position) })}
-    >
-      <Plane args={[8, 8]}>
-        <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
-      </Plane>
-      <Text position={[0, -5, 0]} fontSize={0.45} color="#00ffff" anchorX="center">
-        {data.name}
-      </Text>
-    </Billboard>
   );
 }
 
@@ -297,7 +249,7 @@ function DetailSlide({ open, data, onClose }) {
   );
 }
 
-/* ----------------------------- Camera Controller (스무스 줌인 + 추적 on/off) ----------------------------- */
+/* ----------------------------- Camera Controller ----------------------------- */
 function CameraController({ target, track = true, onArrived }) {
   const controlsRef = useRef();
   const { camera } = useThree();
@@ -323,7 +275,7 @@ function CameraController({ target, track = true, onArrived }) {
     const baseDist =
       target.type === "star" ? 20 :
       target.type === "planet" ? 12 :
-      target.type === "blackhole" ? 14 : 12;
+      12;
 
     let dir = camera.position.clone().sub(dest);
     if (dir.lengthSq() < 1e-6) dir = new THREE.Vector3(0, 0, 1);
@@ -352,7 +304,7 @@ function CameraController({ target, track = true, onArrived }) {
   useFrame(() => {
     const controls = controlsRef.current;
     if (!controls || !followingRef.current || !target) return;
-    if (!track) return; // 상세 패널 열림 등 → 추적 off
+    if (!track) return;
 
     const p = target.positionRef?.current
       ? target.positionRef.current.getWorldPosition(new THREE.Vector3())
@@ -377,10 +329,8 @@ function CameraController({ target, track = true, onArrived }) {
 /* ----------------------------- Main ----------------------------- */
 export default function Universe() {
   const auth = useAuth();
-  const [galaxies, setGalaxies] = useState([]);
   const [stars, setStars] = useState([]);
   const [planets, setPlanets] = useState([]);
-  const [blackholes, setBlackholes] = useState([]);
   const [selected, setSelected] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -390,17 +340,13 @@ export default function Universe() {
     const fetchAll = async () => {
       try {
         setIsLoading(true);
-        const [galRes, starRes, planetRes, bhRes] = await Promise.all([
-          fetch("http://localhost:5000/api/galaxies"),
+        const [starRes, planetRes] = await Promise.all([
           fetch("http://localhost:5000/api/stars"),
           fetch("http://localhost:5000/api/planets"),
-          fetch("http://localhost:5000/api/blackholes"),
         ]);
-        if (!galRes.ok || !starRes.ok || !planetRes.ok || !bhRes.ok) throw new Error("데이터 로딩 실패");
-        setGalaxies(await galRes.json());
+        if (!starRes.ok || !planetRes.ok) throw new Error("데이터 로딩 실패");
         setStars(await starRes.json());
         setPlanets(await planetRes.json());
-        setBlackholes(await bhRes.json());
       } catch (e) {
         setError(e.message);
       } finally {
@@ -409,12 +355,6 @@ export default function Universe() {
     };
     fetchAll();
   }, []);
-
-  const randomPos = () => [
-    (Math.random() - 0.5) * 120,
-    (Math.random() - 0.5) * 40,
-    (Math.random() - 0.5) * 120,
-  ];
 
   return (
     <div className="w-screen h-screen bg-black text-white relative">
@@ -425,28 +365,21 @@ export default function Universe() {
 
           {!isLoading && !error && (
             <>
-              {galaxies.map(d => (
-                <Galaxy key={d._id} data={d} position={randomPos()} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
-              ))}
               {stars.map(d => (
-                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Star key={d._id} data={d} position={[0, 0, 0]}
+                  onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
               ))}
               {planets.map(d => (
                 <Planet
                   key={d._id}
                   data={d}
                   onSelect={(item) => { setSelected(item); setOpenDetail(true); }}
-                  // ✅ 선택된 행성 + 상세패널 열림이면 공전 정지
                   freezeOrbit={openDetail && selected?._id === d._id}
                 />
-              ))}
-              {blackholes.map(d => (
-                <Blackhole key={d._id} data={d} position={randomPos()} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
               ))}
             </>
           )}
 
-          {/* ✅ 상세 패널 열릴 땐 행성 추적 off → 지터 방지 */}
           <CameraController
             target={selected}
             track={!(selected?.type === "planet" && openDetail)}
