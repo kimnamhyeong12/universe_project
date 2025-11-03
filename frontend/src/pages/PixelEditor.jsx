@@ -1,110 +1,102 @@
-import React, { useState, useEffect, Suspense } from 'react';
-// 💡 [새 라이브러리] Konva (2D 캔버스)
-import { Stage, Layer, Rect, Text } from 'react-konva';
-
-// =============================================================
-// 💡 [Phase 3] 2D 픽셀 아트 캔버스
-// - D-Lab 계획서의 "핵심 기능"
-// - Konva.js 라이브러리를 사용
-// - "가짜 데이터(Mock Data)"를 기반으로 UI를 먼저 구현 (Frontend-First)
-// =============================================================
-
-// 💡 "가짜 데이터" (백엔드 API가 아직 없으므로)
-// 나중에 `fetch('GET /api/pixels?planet=...')`로 이 데이터를 받아올 것임
-const MOCK_PIXELS = [
-  { x: 0, y: 0, color: '#FF0000', owner: 'kimnamhyeong12' },
-  { x: 0, y: 1, color: '#00FF00', owner: 'joyeongjun' },
-  { x: 1, y: 0, color: '#0000FF', owner: 'joyeongjun' },
-  { x: 1, y: 1, color: '#FFFFFF', owner: null }, // (소유주 없음)
-  { x: 2, y: 0, color: '#FFFFFF', owner: null },
-  { x: 2, y: 1, color: '#FFFFFF', owner: null },
-  { x: 2, y: 2, color: '#FFFFFF', owner: null },
-  { x: 0, y: 2, color: '#FFFFFF', owner: null },
-  { x: 1, y: 2, color: '#FFFFFF', owner: null },
-];
-// 캔버스 크기 (예: 20x20 그리드)
-const GRID_SIZE = 20; 
-const PIXEL_SIZE = 30; // 픽셀 하나당 30px
+import React, { useState, useEffect } from "react";
+import { Stage, Layer, Rect as KRect } from "react-konva";
 
 /**
- * 🎨 색상 팔레트 (HTML)
+ * HUD 컴포넌트 (상단 바 UI)
  */
-const ColorPalette = ({ selectedColor, onSelectColor }) => {
-  const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FFFFFF', '#000000'];
+function HUD({ left, children }) {
   return (
-    <div className="absolute top-5 left-5 z-10 p-4 bg-black/50 backdrop-blur-sm rounded-lg flex gap-2">
-      {colors.map(color => (
-        <div
-          key={color}
-          className="w-10 h-10 rounded-full cursor-pointer border-2"
-          style={{ 
-            backgroundColor: color,
-            borderColor: selectedColor === color ? '#00ffff' : 'transparent' // 💡 선택된 색상 테두리
-          }}
-          onClick={() => onSelectColor(color)}
-        />
-      ))}
+    <div
+      className={`absolute top-5 ${left ? "left-5" : "right-5"} z-20 p-4 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10`}
+    >
+      {children}
     </div>
   );
-};
+}
 
 /**
- * 🖼️ 픽셀 캔버스 (Konva.js)
+ * PixelEditor 메인 컴포넌트
  */
-export default function PixelEditor() {
-  // 💡 [상태 1] 현재 DB에 저장된 픽셀들
-  const [pixels, setPixels] = useState(MOCK_PIXELS);
-  // 💡 [상태 2] 내가 선택한 "브러시" 색상
-  const [selectedColor, setSelectedColor] = useState('#FFFFFF');
+export default function PixelEditor({ planetName = "미지의 행성", onBack = () => {} }) {
+  const [pixels, setPixels] = useState([
+    { x: 0, y: 0, color: "#FF0000", owner: "kimnamhyeong12" },
+    { x: 0, y: 1, color: "#00FF00", owner: "joyeongjun" },
+    { x: 1, y: 0, color: "#0000FF", owner: "joyeongjun" },
+    { x: 1, y: 1, color: "#FFFFFF", owner: null },
+    { x: 2, y: 0, color: "#FFFFFF", owner: null },
+    { x: 2, y: 1, color: "#FFFFFF", owner: null },
+    { x: 2, y: 2, color: "#FFFFFF", owner: null },
+    { x: 0, y: 2, color: "#FFFFFF", owner: null },
+    { x: 1, y: 2, color: "#FFFFFF", owner: null },
+  ]);
 
-  // 픽셀 클릭(그리기) 이벤트
-  const handlePixelClick = (clickedPixel) => {
-    // 💡 (D-Lab 핵심)
-    // 1. "소유권" 확인 (지금은 'joyeongjun'만 그릴 수 있게 하드코딩)
-    if (clickedPixel.owner !== 'joyeongjun' && clickedPixel.owner !== null) {
-       alert(`[${clickedPixel.owner}]님의 땅입니다. (그리기 실패)`);
-       return;
+  const GRID_SIZE = 20;
+  const PIXEL_SIZE = 30;
+  const [selectedColor, setSelectedColor] = useState("#FFFFFF");
+  const [stageSize, setStageSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+
+  useEffect(() => {
+    const onResize = () => setStageSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const handlePixelClick = (px) => {
+    if (px.owner && px.owner !== "joyeongjun") {
+      alert(`[${px.owner}]님의 구역입니다.`);
+      return;
     }
-    
-    // 2. 픽셀 색상 "업데이트" (React 상태 업데이트)
-    const newPixels = pixels.map(p => 
-      (p.x === clickedPixel.x && p.y === clickedPixel.y)
-        ? { ...p, color: selectedColor } // 💡 클릭한 픽셀의 색상 변경
-        : p
+    setPixels((prev) =>
+      prev.map((p) => (p.x === px.x && p.y === px.y ? { ...p, color: selectedColor } : p))
     );
-    setPixels(newPixels);
-    
-    // 3. 💡 [나중의 일]
-    // 백엔드에 이 변경사항을 "저장" (API 호출)
-    // fetch('POST /api/pixels', { body: { x, y, color } })
-    console.log(`[${clickedPixel.x}, ${clickedPixel.y}]에 ${selectedColor} 색상으로 그리기`);
   };
 
-  return (
-    <div className="w-screen h-screen bg-gray-800 relative">
-      {/* 1. HTML UI (색상 팔레트) */}
-      <ColorPalette selectedColor={selectedColor} onSelectColor={setSelectedColor} />
+  const palette = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FFFFFF", "#000000"];
 
-      {/* 2. 2D 캔버스 (Konva) */}
-      <Stage 
-        width={window.innerWidth} 
-        height={window.innerHeight} 
-        draggable // 💡 캔버스 이동(Pan)
-        dragBoundFunc={(pos) => ({ x: pos.x, y: pos.y })} // 이동 제한 (옵션)
-      >
+  return (
+    <div className="w-screen h-screen bg-[#0b1020] relative">
+      {/* 상단 바 */}
+      <HUD left>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 border border-white/20"
+          >
+            ← 3D로 돌아가기
+          </button>
+          <div className="text-cyan-300 font-bold">{planetName} · 픽셀 에디터</div>
+        </div>
+      </HUD>
+
+      {/* 팔레트 */}
+      <div className="absolute top-5 right-5 z-20 p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10 flex gap-2">
+        {palette.map((c) => (
+          <div
+            key={c}
+            onClick={() => setSelectedColor(c)}
+            className="w-9 h-9 rounded-full border-2 cursor-pointer"
+            style={{
+              background: c,
+              borderColor: selectedColor === c ? "#00ffff" : "transparent",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Konva Stage */}
+      <Stage width={stageSize.w} height={stageSize.h} draggable>
         <Layer>
-          {/* 💡 DB에서 불러온 픽셀들(.map) */}
-          {pixels.map((pixel, i) => (
-            <Rect
+          {pixels.map((p, i) => (
+            <KRect
               key={i}
-              x={pixel.x * PIXEL_SIZE} // 💡 2D 좌표
-              y={pixel.y * PIXEL_SIZE}
+              x={p.x * PIXEL_SIZE}
+              y={p.y * PIXEL_SIZE}
               width={PIXEL_SIZE}
               height={PIXEL_SIZE}
-              fill={pixel.color} // 💡 픽셀 색상
-              stroke="#555" // 픽셀 그리드(격자)
+              fill={p.color}
+              stroke="#333"
               strokeWidth={1}
-              onClick={() => handlePixelClick(pixel)} // 💡 클릭 이벤트
+              onClick={() => handlePixelClick(p)}
             />
           ))}
         </Layer>
