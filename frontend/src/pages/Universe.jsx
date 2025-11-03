@@ -1,3 +1,4 @@
+// src/pages/Universe.jsx
 import React, { useRef, useState, useEffect, Suspense } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -30,15 +31,15 @@ function HUD({ username }) {
 
 /* ----------------------------- Orbit Line ----------------------------- */
 function OrbitLine({ radius }) {
-  const points = [];
-  const segments = 128;
-  for (let i = 0; i <= segments; i++) {
-    const theta = (i / segments) * Math.PI * 2;
-    points.push(new THREE.Vector3(Math.cos(theta) * radius, 0, Math.sin(theta) * radius));
+  const pts = [];
+  const seg = 128;
+  for (let i = 0; i <= seg; i++) {
+    const t = (i / seg) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(t) * radius, 0, Math.sin(t) * radius));
   }
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const geom = new THREE.BufferGeometry().setFromPoints(pts);
   return (
-    <line geometry={geometry}>
+    <line geometry={geom}>
       <lineBasicMaterial attach="material" color="white" linewidth={1} />
     </line>
   );
@@ -54,37 +55,39 @@ function SaturnRings() {
   );
 }
 
-/* ----------------------------- Planet ----------------------------- */
+/* ----------------------------- Planet (월드좌표 전달) ----------------------------- */
 function Planet({ data, onSelect }) {
   const planetRef = useRef();
   const texture = useTexture(data.imageUrl || "/textures/planet_default.jpg");
   const orbitRadius = data.orbitRadius || 20 + Math.random() * 10;
-  const orbitSpeed = data.orbitSpeed || 0.05 + Math.random() * 0.02;
-  const orbitOffset = Math.random() * Math.PI * 2;
+  const orbitSpeed  = data.orbitSpeed  || 0.05 + Math.random() * 0.02;
+  const orbitOffset = useRef(Math.random() * Math.PI * 2);
   const isSaturn = (data.name || "").toLowerCase().includes("saturn");
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    const angle = orbitOffset + t * orbitSpeed;
-    const x = Math.cos(angle) * orbitRadius;
-    const z = Math.sin(angle) * orbitRadius;
+    const a = orbitOffset.current + t * orbitSpeed;
+    const x = Math.cos(a) * orbitRadius;
+    const z = Math.sin(a) * orbitRadius;
     if (planetRef.current) {
       planetRef.current.position.set(x, 0, z);
       planetRef.current.rotation.y += 0.01;
     }
   });
 
+  const handleClick = () => {
+    const world = new THREE.Vector3();
+    planetRef.current?.getWorldPosition(world);         // ✅ 월드 좌표
+    onSelect({
+      ...data,
+      type: "planet",
+      positionRef: planetRef,                            // 추적용 ref
+      worldPos: world.clone(),                           // ✅ 월드 좌표 저장
+    });
+  };
+
   return (
-    <group
-      onClick={() =>
-        onSelect({
-          ...data,
-          type: "planet",
-          positionRef: planetRef, // 카메라 추적용
-          position: planetRef.current ? [planetRef.current.position.x, 0, planetRef.current.position.z] : [0,0,0],
-        })
-      }
-    >
+    <group onClick={handleClick}>
       <OrbitLine radius={orbitRadius} />
       <group ref={planetRef}>
         <Sphere args={[1.5, 32, 32]}>
@@ -100,12 +103,12 @@ function Planet({ data, onSelect }) {
 }
 
 /* ----------------------------- Star ----------------------------- */
-function Star({ data, position = [0,0,0], onSelect }) {
+function Star({ data, position = [0, 0, 0], onSelect }) {
   const texture = useTexture(data.imageUrl || "/textures/sun.jpg");
   return (
     <group
       position={position}
-      onClick={() => onSelect({ ...data, type: "star", position })}
+      onClick={() => onSelect({ ...data, type: "star", worldPos: new THREE.Vector3(...position) })}
     >
       <Sphere args={[3, 32, 32]}>
         <meshStandardMaterial map={texture} emissive="yellow" emissiveIntensity={2.5} />
@@ -124,12 +127,15 @@ function Blackhole({ data, position, onSelect }) {
   const texture = useVideoTexture(data.imageUrl || "/textures/blackhole.mp4", {
     start: true, loop: true, muted: true, crossOrigin: "anonymous",
   });
-  useFrame((_, delta) => {
-    if (diskRef.current) diskRef.current.rotation.z += delta * 0.5;
+  useFrame((_, d) => {
+    if (diskRef.current) diskRef.current.rotation.z += d * 0.5;
   });
 
   return (
-    <group position={position} onClick={() => onSelect({ ...data, type: "blackhole", position })}>
+    <group
+      position={position}
+      onClick={() => onSelect({ ...data, type: "blackhole", worldPos: new THREE.Vector3(...position) })}
+    >
       <Sphere args={[2, 32, 32]}><meshBasicMaterial color="black" /></Sphere>
       <Billboard>
         <Plane ref={diskRef} args={[8, 8]}>
@@ -147,7 +153,10 @@ function Blackhole({ data, position, onSelect }) {
 function Galaxy({ data, position, onSelect }) {
   const texture = useTexture(data.imageUrl || "/textures/galaxy.png");
   return (
-    <Billboard position={position} onClick={() => onSelect({ ...data, type: "galaxy", position })}>
+    <Billboard
+      position={position}
+      onClick={() => onSelect({ ...data, type: "galaxy", worldPos: new THREE.Vector3(...position) })}
+    >
       <Plane args={[8, 8]}>
         <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
       </Plane>
@@ -174,14 +183,14 @@ function InfoBox({ label, value }) {
 /* ----------------------------- ObjectPanel ----------------------------- */
 function ObjectPanel({ data, onClose, onOpenDetail }) {
   const isStar = data.type === "star";
+  const posText =
+    data.worldPos
+      ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
+      : "-";
+
   return (
     <div className="absolute left-8 md:left-10 z-20 top-28 md:top-32">
-      <div
-        className={
-          "card-glass panel-tall panel-narrow " +
-          "w-[360px] sm:w-[380px] md:w-[400px] p-6 md:p-7"
-        }
-      >
+      <div className={"card-glass panel-tall panel-narrow w-[360px] sm:w-[380px] md:w-[400px] p-6 md:p-7"}>
         {/* 헤더 */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-amber-400/70 to-yellow-200/50 shadow-[0_0_30px_-5px_rgba(255,200,0,0.8)]" />
@@ -193,18 +202,11 @@ function ObjectPanel({ data, onClose, onOpenDetail }) {
           </div>
         </div>
 
-        {/* 인포 박스 */}
+        {/* 인포 */}
         <div className="mt-4 grid grid-cols-1 gap-3 text-cyan-100/90">
           <InfoBox label="크기" value={isStar ? "대" : "중"} />
           <InfoBox label="등급" value={isStar ? "G형" : "—"} />
-          <InfoBox
-            label="좌표"
-            value={
-              Array.isArray(data.position)
-                ? data.position.map((n) => Number(n).toFixed(1)).join(", ")
-                : "-"
-            }
-          />
+          <InfoBox label="좌표" value={posText} />
           <InfoBox label="상태" value={<span className="text-emerald-300">정상</span>} />
         </div>
 
@@ -228,6 +230,11 @@ function ObjectPanel({ data, onClose, onOpenDetail }) {
 /* ----------------------------- DetailSlide ----------------------------- */
 function DetailSlide({ open, data, onClose }) {
   const [tab, setTab] = useState("info");
+  const posText =
+    data?.worldPos
+      ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
+      : "-";
+
   return (
     <div className={`detail-wrap ${open ? "open" : ""}`}>
       <div className="detail-panel card-glass">
@@ -252,14 +259,7 @@ function DetailSlide({ open, data, onClose }) {
               <div className="grid grid-cols-2 gap-3">
                 <InfoBox label="유형" value={data?.type || "-"} />
                 <InfoBox label="등급" value={data?.type === "star" ? "G형" : "-"} />
-                <InfoBox
-                  label="좌표"
-                  value={
-                    Array.isArray(data?.position)
-                      ? data.position.map((n) => Number(n).toFixed(1)).join(", ")
-                      : "-"
-                  }
-                />
+                <InfoBox label="좌표" value={posText} />
                 <InfoBox label="상태" value={<span className="text-emerald-300">정상</span>} />
               </div>
             </div>
@@ -290,55 +290,94 @@ function DetailSlide({ open, data, onClose }) {
   );
 }
 
-/* ----------------------------- Camera Controller (follow orbit) ----------------------------- */
+/* ----------------------------- Camera Controller (스무스 줌인 + 부드러운 추적) ----------------------------- */
 function CameraController({ target, onArrived }) {
-  const ref = useRef();
+  const controlsRef = useRef();
   const { camera } = useThree();
 
-  // 최초 포커스 이동
+  const followingRef   = useRef(false);                 // 초기 줌인 끝났는가?
+  const lastCamPosRef  = useRef(new THREE.Vector3());   // 보간용 누적 카메라 위치
+  const offsetRef      = useRef(new THREE.Vector3());   // 대상 대비 카메라 오프셋 유지
+
+  // 대상 선택 시: 애니메이션으로 접근(true). 끝나면 추적 시작.
   useEffect(() => {
-    if (!ref.current) return;
+    const controls = controlsRef.current;
+    if (!controls) return;
+
     if (!target) {
-      ref.current.setLookAt(0, 0, 80, 0, 0, 0, true);
+      followingRef.current = false;
+      controls.setLookAt(0, 0, 80, 0, 0, 0, true);
       return;
     }
-    const dest = target.positionRef
-      ? target.positionRef.current?.position ?? new THREE.Vector3(0,0,0)
-      : new THREE.Vector3(...(target.position || [0, 0, 0]));
+
+    // 대상 월드 좌표
+    const dest = target.positionRef?.current
+      ? target.positionRef.current.getWorldPosition(new THREE.Vector3())
+      : (target.worldPos ? target.worldPos.clone() : new THREE.Vector3(0, 0, 0));
+
     const baseDist =
-      target.type === "star" ? 12 :
-      target.type === "planet" ? 8 :
-      target.type === "blackhole" ? 10 : 9;
+      target.type === "star" ? 20 :
+      target.type === "planet" ? 12 :
+      target.type === "blackhole" ? 14 : 12;
 
-    const dir = dest.clone().normalize();
-    const camPos = dest.clone().add(dir.multiplyScalar(-baseDist));
+    // 0벡터 방지: 현 카메라 → 대상 방향
+    let dir = camera.position.clone().sub(dest);
+    if (dir.lengthSq() < 1e-6) dir = new THREE.Vector3(0, 0, 1);
+    dir.normalize();
 
-    ref.current.setLookAt(camPos.x, camPos.y, camPos.z, dest.x, dest.y, dest.z, true)
-      .then(() => onArrived && onArrived());
-  }, [target]);
+    const arriveCamPos = dest.clone().add(dir.multiplyScalar(baseDist));
 
-  // 공전 추적
+    // 초기 줌인 동안 추적 OFF
+    followingRef.current = false;
+    lastCamPosRef.current.copy(arriveCamPos);
+    offsetRef.current.copy(arriveCamPos.clone().sub(dest)); // 오프셋 기억
+
+    controls.enabled = false;
+    controls
+      .setLookAt(
+        arriveCamPos.x, arriveCamPos.y, arriveCamPos.z,
+        dest.x, dest.y, dest.z,
+        true // ✅ 스무스 애니메이션
+      )
+      .then(() => {
+        controls.enabled = true;
+        followingRef.current = true;                      // ✅ 이제부터 추적 시작
+        onArrived && onArrived();
+      });
+  }, [target, camera, onArrived]);
+
+  // 프레임별 추적(행성처럼 움직이는 대상)
   useFrame(() => {
-    if (target?.type === "planet" && target.positionRef?.current) {
-      const p = target.positionRef.current.position;
-      const camOffset = new THREE.Vector3(p.x + 8, p.y + 3, p.z + 8);
-      ref.current?.setLookAt(
-        camOffset.x, camOffset.y, camOffset.z,
-        p.x, p.y, p.z,
-        false
-      );
-    }
+    const controls = controlsRef.current;
+    if (!controls || !followingRef.current || !target) return;
+
+    const p = target.positionRef?.current
+      ? target.positionRef.current.getWorldPosition(new THREE.Vector3())
+      : (target.worldPos ? target.worldPos : null);
+    if (!p) return;
+
+    // 고정 오프셋을 유지하면서 부드럽게 보간
+    const desiredCam = p.clone().add(offsetRef.current);
+    lastCamPosRef.current.lerp(desiredCam, 0.08); // 0.05~0.15로 취향 조절
+
+    controls.setLookAt(
+      lastCamPosRef.current.x,
+      lastCamPosRef.current.y,
+      lastCamPosRef.current.z,
+      p.x, p.y, p.z,
+      false // 프레임 업데이트는 즉시
+    );
   });
 
-  return <CameraControls ref={ref} />;
+  return <CameraControls ref={controlsRef} />;
 }
 
 /* ----------------------------- Main ----------------------------- */
 export default function Universe() {
   const auth = useAuth();
   const [galaxies, setGalaxies] = useState([]);
-  const [stars, setStars] = useState([]);
-  const [planets, setPlanets] = useState([]);
+  const [stars, setStars]       = useState([]);
+  const [planets, setPlanets]   = useState([]);
   const [blackholes, setBlackholes] = useState([]);
   const [selected, setSelected] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
@@ -385,24 +424,21 @@ export default function Universe() {
           {!isLoading && !error && (
             <>
               {galaxies.map(d => (
-                <Galaxy key={d._id} data={d} position={randomPos()} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Galaxy key={d._id} data={d} position={randomPos()} onSelect={setSelected} />
               ))}
               {stars.map(d => (
-                <Star key={d._id} data={d} position={[0,0,0]} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={setSelected} />
               ))}
               {planets.map(d => (
-                <Planet key={d._id} data={d} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Planet key={d._id} data={d} onSelect={setSelected} />
               ))}
               {blackholes.map(d => (
-                <Blackhole key={d._id} data={d} position={randomPos()} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Blackhole key={d._id} data={d} position={randomPos()} onSelect={setSelected} />
               ))}
             </>
           )}
 
-          <CameraController
-            target={selected}
-            onArrived={() => selected && setOpenDetail(true)}
-          />
+          <CameraController target={selected} onArrived={() => setOpenDetail(true)} />
         </Suspense>
 
         <EffectComposer>
