@@ -1,211 +1,92 @@
-/* ─────────────────────────────────────────────
-   CELESTIA Landing (Splash) Scoped Styles
-   모든 룰은 .splash 아래에서만 동작합니다.
-   ───────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-.splash {
-  --cel-bg: #06090f;
-  --cel-text: #eaf6ff;
-  --cel-dim: rgba(255, 255, 255, 0.72);
-  --cel-cyan: #00f0ff;
-  --cel-blue: #6aa8ff;
-  --cel-indigo: #8c6bff;
-  --cel-gradient: linear-gradient(135deg, var(--cel-cyan), var(--cel-blue) 45%, var(--cel-indigo));
-  color: var(--cel-text);
+:root{
+  --font-display: "Sora", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --font-ui: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+
+  --c-bg:#05090f; --c-card:rgba(10,18,28,.55); --c-line:rgba(255,255,255,.12); --c-scrim:rgba(0,0,0,.55);
+  --c-text:#eaf7ff; --c-sub:rgba(234,247,255,.82);
+  --c-cyan:#59f0ff; --c-cyan-dim:rgba(89,240,255,.16);
+  --glow:0 0 36px -8px rgba(89,240,255,.75);
 }
 
-/* 베이스 리셋(스코프 내부만) */
-.splash * {
-  box-sizing: border-box;
-}
+html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var(--font-ui);scroll-behavior:smooth;}
+*{box-sizing:border-box}
 
-/* 네비게이션 유리 효과 */
-.splash .nav-glass {
-  background: rgba(10, 16, 25, 0.45);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  box-shadow: 0 10px 40px -20px rgba(0, 0, 0, .6);
-}
+.site-header{position:fixed;inset:0 0 auto 0;z-index:50;transition:backdrop-filter .3s,background .3s,border-color .3s}
+.site-header--scrolled{background:rgba(8,14,20,.35);backdrop-filter:blur(10px);border-bottom:1px solid var(--c-line)}
+.site-header__progress{height:2px;background:linear-gradient(90deg,#00eaff,#a0b8ff);width:var(--progress,0%);transition:width .15s linear}
+.site-header__inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px}
+.site-header__brand{font-family:var(--font-display);font-weight:800;letter-spacing:.02em;cursor:pointer}
+.site-header__nav{display:flex;gap:10px}
+.site-header__link{padding:8px 12px;border-radius:10px;color:rgba(255,255,255,.75);transition:.2s}
+.site-header__link:hover{color:white;background:rgba(255,255,255,.06)}
+.site-header__link.is-active{color:white;background:rgba(0,255,255,.12);border:1px solid rgba(0,255,255,.25)}
+.site-header__actions{display:flex;gap:10px;align-items:center}
+.site-header__user{opacity:.85}
 
-/* 큰 타이틀 (그라디언트 텍스트) */
-.splash .heading-hero {
-  line-height: 1.05;
-  letter-spacing: .02em;
-  background: linear-gradient(180deg, #eaf6ff, #a7c6ff 55%, #89a3ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 20px 60px rgba(0,0,0,.4);
-}
+.btn-outline{border:1px solid var(--c-line);color:var(--c-text);padding:10px 14px;border-radius:12px;background:transparent;transition:.2s;font-weight:600}
+.btn-outline:hover{background:rgba(255,255,255,.08)}
+.btn-ghost{border:1px solid rgba(157,234,255,.25);color:#9deaff;padding:10px 14px;border-radius:12px;background:transparent;transition:.2s}
+.btn-ghost:hover{border-color:rgba(157,234,255,.5);color:white}
+.btn-glow{border:1px solid rgba(0,255,255,.32);background:linear-gradient(180deg,rgba(0,255,255,.22),rgba(0,255,255,.10));color:#e7fbff;padding:12px 18px;border-radius:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;box-shadow:var(--glow),inset 0 0 14px rgba(0,255,255,.10);transition:transform .15s,box-shadow .25s,background .25s}
+.btn-glow:hover{transform:translateY(-1px);box-shadow:0 0 48px -6px rgba(89,240,255,.95),inset 0 0 22px rgba(0,255,255,.14)}
+.btn-xl{padding:16px 28px;font-size:1.05rem;border-radius:16px}
 
-/* 서브타이틀 */
-.splash .sub-hero {
-  color: rgba(234, 246, 255, .9);
-  text-shadow: 0 8px 40px rgba(0,0,0,.35);
-}
+.hero{position:relative;height:100vh;overflow:hidden;--mx:0;--my:0}
+.hero__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:translate(calc(var(--mx)*6%),calc(var(--my)*6%)) scale(1.06);transition:transform .08s linear}
+.hero__scrim{position:absolute;inset:0;background:radial-gradient(circle at 50% 60%,rgba(0,0,0,.25),rgba(0,0,0,.85))}
+.hero__stars{position:absolute;inset:-40% -40% -40% -40%;background:
+  radial-gradient(2px 2px at 20% 30%,rgba(255,255,255,.6),transparent 60%),
+  radial-gradient(1px 1px at 80% 70%,rgba(255,255,255,.5),transparent 60%),
+  radial-gradient(1.5px 1.5px at 60% 10%,rgba(255,255,255,.5),transparent 60%);
+opacity:.25;filter:blur(1px)}
+.hero__inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px}
+.hero__title{font-family:var(--font-display);font-weight:800;letter-spacing:.02em;font-size:clamp(72px,12vw,164px);background:conic-gradient(from 110deg at 50% 50%,#b5f9ff,#6ff3ff,#a7b2ff,#6ff3ff,#b5f9ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 8px 40px rgba(255,255,255,.14))}
+.hero__subtitle{font-size:clamp(18px,2.2vw,26px);color:var(--c-sub);margin-top:16px}
+.hero__cta{margin-top:28px}
 
-/* 메인 CTA 버튼: 빛이 차오르는 느낌 */
-.splash .btn-glow {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .6rem;
-  padding: 0.95rem 2.4rem;
-  border-radius: 999px;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: #0b0f16;
-  overflow: hidden;
-  isolation: isolate;
-  background: radial-gradient(120% 160% at 50% 180%, #ffffff 0%, #cbe9ff 40%, #97c8ff 70%, #5aa4ff 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.35),
-    0 14px 50px -20px rgba(127, 194, 255, .7);
-  transition: transform .22s ease, box-shadow .3s ease, filter .3s ease;
-}
+.section{position:relative;padding:120px 0;overflow:hidden}
+.section.dark{background:#070c12}
+.section__bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.18;filter:saturate(1.2) contrast(1.05)}
+.section__inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:0 24px}
+.section__title{font-family:var(--font-display);font-size:clamp(28px,3.2vw,44px);font-weight:800;letter-spacing:.02em}
+.section__desc{color:var(--c-sub);margin-top:12px;max-width:720px}
+.hr-neon{height:1px;margin-top:18px;background:linear-gradient(90deg,rgba(0,255,255,.4),rgba(0,0,0,0))}
 
-.splash .btn-glow::before {
-  content: "";
-  position: absolute;
-  inset: -40% -40%;
-  background: conic-gradient(from 180deg, rgba(255,255,255,.0), rgba(255,255,255,.45), rgba(255,255,255,.0));
-  filter: blur(16px);
-  opacity: .0;
-  transform: rotate(0deg);
-  transition: opacity .4s ease, transform .8s linear;
-  z-index: -1;
-}
+.grid{display:grid;gap:24px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}
+.row{display:flex;gap:12px}.between{justify-content:space-between}.center{align-items:center}.ml-12{margin-left:12px}
 
-.splash .btn-glow:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.06);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.55),
-    0 26px 80px -24px rgba(120, 200, 255, .9);
-}
+.card-glass{background:var(--c-card);backdrop-filter:blur(14px);border:1px solid rgba(0,255,255,.18);border-radius:16px;box-shadow:0 0 40px -10px rgba(0,255,255,.45), inset 0 0 30px rgba(0,255,255,.06)}
+.p-20{padding:20px}.p-24{padding:24px}
+.card__title{font-weight:800;font-size:1.25rem;margin-bottom:6px}
+.card__desc{color:var(--c-sub)}
+.card__list{margin:0;padding-left:18px;color:var(--c-sub)}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:.8rem;background:var(--c-cyan-dim);color:var(--c-text);border:1px solid rgba(0,255,255,.25);margin-bottom:8px}
+.plan__name{font-weight:800;font-size:1.35rem}
+.plan__price{font-size:1.8rem;font-weight:900;margin-top:6px}
 
-.splash .btn-glow:hover::before {
-  opacity: .8;
-  transform: rotate(360deg);
-}
+.masonry{columns:4;column-gap:16px}
+.masonry__item{height:220px;margin-bottom:16px;border-radius:14px;background-size:cover;background-position:center;border:1px solid var(--c-line);box-shadow:inset 0 0 40px rgba(0,0,0,.35)}
 
-/* 서브 버튼(유리 느낌) */
-.splash .btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  padding: 0.85rem 1.4rem;
-  border-radius: 999px;
-  color: var(--cel-text);
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  transition: background .2s ease, transform .2s ease, border-color .2s ease;
-}
-.splash .btn-ghost:hover {
-  transform: translateY(-2px);
-  background: rgba(255,255,255,.12);
-  border-color: rgba(255,255,255,.28);
-}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease, transform .7s ease}
+.reveal--show{opacity:1;transform:translateY(0)}
+.delay-1{transition-delay:120ms}.delay-2{transition-delay:240ms}.delay-3{transition-delay:360ms}
 
-/* 카드(홈 한정) — 유니버스의 .card-glass와 충돌 방지 */
-.splash .card-glass {
-  background: rgba(8, 19, 30, 0.55);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255, .12);
-  border-radius: 16px;
-  box-shadow:
-    0 0 40px -10px rgba(0, 170, 255, 0.35),
-    inset 0 0 30px rgba(0, 140, 255, 0.05);
-}
+.footer{border-top:1px solid var(--c-line);background:#070c12}
+.footer__inner{max-width:1200px;margin:0 auto;padding:24px;display:flex;align-items:center;justify-content:space-between}
+.footer__brand{font-family:var(--font-display);font-weight:900;letter-spacing:.02em}
 
-/* 섹션 공통 래퍼 + 배경 이미지 */
-.splash .section-wrap {
-  position: relative;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background: radial-gradient(1200px 800px at 50% -20%, rgba(0, 140, 255, .16), transparent 70%), var(--cel-bg);
+@media (max-width:1024px){
+  .grid-3{grid-template-columns:1fr 1fr}
+  .masonry{columns:3}
 }
-
-.splash .section-wrap > .bg {
-  position: absolute;
-  inset: 0;
-  background-position: center;
-  background-size: cover;
-  opacity: .25;
-  transform: scale(1.04);
-  filter: saturate(1.05) contrast(1.02) brightness(.92);
-}
-
-/* 배경 위 가독성 스크림 */
-.splash .section-wrap > .scrim {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(1000px 600px at 50% 0%, rgba(0,0,0,.55), transparent 60%),
-              linear-gradient(to bottom, rgba(6,9,15,.65), rgba(6,9,15,.8) 60%, rgba(6,9,15, .92));
-}
-
-/* 필름 그레인 살짝 */
-.splash .grain {
-  position: absolute;
-  inset: 0;
-  opacity: .06;
-  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
-  pointer-events: none;
-}
-
-/* 썸네일 */
-.splash .thumb {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  border-radius: 14px;
-  background-size: cover;
-  background-position: center;
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: inset 0 0 40px rgba(0,0,0,.35);
-}
-
-/* 작은 칩 */
-.splash .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: .45rem;
-  padding: .4rem .75rem;
-  border-radius: 999px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  color: var(--cel-dim);
-  font-weight: 700;
-  letter-spacing: .04em;
-}
-
-/* 섹션 타이틀 */
-.splash .section-title {
-  font-weight: 900;
-  letter-spacing: .02em;
-  text-shadow: 0 12px 60px rgba(0,0,0,.5);
-}
-
-/* 구분선 */
-.splash .hr-neon {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,255,255,.4), transparent);
-  border: 0;
-}
-
-/* 반응형 스케일 */
-@media (max-width: 1024px) {
-  .splash .heading-hero { font-size: clamp(42px, 7vw, 92px); }
-}
-@media (min-width: 1025px) {
-  .splash .heading-hero { font-size: clamp(72px, 9vw, 152px); }
+@media (max-width:768px){
+  .grid-2{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .masonry{columns:2}
+  .site-header__nav{display:none}
 }

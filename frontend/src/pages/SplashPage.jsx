@@ -1,49 +1,74 @@
-// src/pages/SplashPage.jsx
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import MainHeader from "../components/MainHeader.jsx";
-import Modal from "../components/Modal.jsx";
-
-// 3D/공용 스타일(있다면 유지)
-import "../styles/celestia-styles.css";
-// 랜딩 전용 스코프 스타일
+import SiteHeader from "../components/SiteHeader.jsx";
+import Modal from "../components/Modal.jsx";         // ✅ 기존 로그인 모달 재사용
+import { useAuth } from "../context/AuthContext";    // ✅ 로그인 성공 시 반영
 import "../styles/landing.css";
 
 export default function SplashPage({ onEnter }) {
   const nav = useNavigate();
-  const [modal, setModal] = useState(null);
+  const auth = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  // 헤더에서 “로그인” 클릭 시 열리도록 global 이벤트 바인딩
+  useEffect(() => {
+    const open = () => setLoginOpen(true);
+    window.addEventListener("celestia:open-login", open);
+    return () => window.removeEventListener("celestia:open-login", open);
+  }, []);
 
   const refs = {
     home: useRef(null),
     about: useRef(null),
-    guide: useRef(null),
+    capability: useRef(null),
+    programs: useRef(null),
     gallery: useRef(null),
-    team: useRef(null),
-    shop: useRef(null),
+    contact: useRef(null),
   };
+
+  // 히어로 패럴랙스
+  useEffect(() => {
+    const hero = refs.home.current;
+    if (!hero) return;
+    const onMove = (e) => {
+      const x = (e.clientX - window.innerWidth / 2) / window.innerWidth;
+      const y = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+      hero.style.setProperty("--mx", `${x}`);
+      hero.style.setProperty("--my", `${y}`);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  // 섹션 reveal
+  useEffect(() => {
+    const els = document.querySelectorAll(".reveal");
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("reveal--show")),
+      { threshold: 0.2 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   const handleEnter = () => (onEnter ? onEnter() : nav("/universe"));
 
   return (
-    <div className="splash">
-      {/* 헤더 (상단 네비) */}
-      <MainHeader onModalOpen={setModal} anchors={refs} />
+    <>
+      <SiteHeader anchors={refs} />
 
       {/* HERO */}
-      <section ref={refs.home} id="home" className="relative h-screen w-screen overflow-hidden">
-        <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
+      <section ref={refs.home} data-id="home" className="hero">
+        <video className="hero__bg" autoPlay muted loop playsInline>
           <source src="/celestia_bg.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,.25),rgba(0,0,0,.85))]" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
-          <h1 className="heading-hero text-[14vw] md:text-8xl">
-            CELESTIA
-          </h1>
-          <p className="sub-hero mt-6 text-lg md:text-2xl">나만의 우주를 소유하고, 창조하세요.</p>
-
-          <div className="mt-12">
-            <button onClick={handleEnter} className="btn-glow">
+        <div className="hero__scrim" />
+        <div className="hero__stars" />
+        <div className="hero__inner">
+          <h1 className="hero__title">CELESTIA</h1>
+          <p className="hero__subtitle">나만의 우주를 소유하고, 창조하세요.</p>
+          <div className="hero__cta">
+            <button className="btn-glow btn-xl" onClick={handleEnter}>
               CELESTIA 입장하기
             </button>
           </div>
@@ -51,127 +76,73 @@ export default function SplashPage({ onEnter }) {
       </section>
 
       {/* ABOUT */}
-      <section ref={refs.about} id="about" className="section-wrap">
-        <div className="bg" style={{ backgroundImage: "url(/assets/sections/about.jpg)" }} />
-        <div className="scrim" />
-        <div className="grain" />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-28">
-          <h2 className="section-title text-4xl md:text-5xl">CELESTIA란?</h2>
-          <p className="mt-6 text-white/85 leading-relaxed text-lg max-w-3xl">
-            CELESTIA는 디지털 우주에서 <b className="text-cyan-300">소유</b>와 <b className="text-cyan-300">창작</b>을 결합한
-            인터랙티브 경험입니다. 행성의 구역을 구매하고 그 위에 직접 픽셀 아트를 창조해 우주에 당신의 흔적을 남기세요.
-          </p>
-          <div className="mt-10 hr-neon" />
-          <div className="mt-10 grid md:grid-cols-3 gap-6">
+      <section ref={refs.about} data-id="about" className="section">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/about.jpg)" }} />
+        <div className="section__inner">
+          <div className="grid grid-2">
+            <div className="reveal">
+              <h2 className="section__title">CELESTIA란?</h2>
+              <p className="section__desc">
+                CELESTIA는 디지털 우주에서 <b>소유</b>와 <b>창작</b>을 결합한 프리미엄 인터랙션입니다.
+                행성 구역을 소유하고, 픽셀 아트로 우주를 채우세요.
+              </p>
+              <div className="hr-neon" />
+            </div>
+            <div className="reveal delay-1">
+              <div className="card-glass p-24">
+                <h3 className="card__title">핵심 가치</h3>
+                <ul className="card__list">
+                  <li>소유권 중심의 지속성</li>
+                  <li>크리에이터 퍼스트 도구</li>
+                  <li>전시 · 교류 · 거래 생태계</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CAPABILITY */}
+      <section ref={refs.capability} data-id="capability" className="section dark">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/capability.jpg)" }} />
+        <div className="section__inner">
+          <h2 className="section__title reveal">기술 역량</h2>
+          <div className="grid grid-3 mt-24">
             {[
-              { t: "우주 소유권", d: "행성의 특정 구역을 구매해 나만의 공간으로." },
-              { t: "픽셀 창작", d: "브라우저에서 바로 그려지는 픽셀 에디터." },
-              { t: "커뮤니티", d: "갤러리에 전시하고 교류하고 거래하기." },
-            ].map((c, i) => (
-              <div key={i} className="card-glass p-6 hover:-translate-y-1 transition">
-                <div className="text-2xl font-bold mb-2">{c.t}</div>
-                <p className="text-white/80">{c.d}</p>
+              ["Cinematic 3D", "React Three Fiber + postprocessing 시네마틱 연출"],
+              ["Orbit System", "자전/공전 · 카메라 스냅/팔로우"],
+              ["Pixel Studio", "Konva 기반 고성능 픽셀 에디터"],
+            ].map(([t, d], i) => (
+              <div key={t} className={`card-glass p-20 reveal delay-${i}`}>
+                <div className="badge">CAP {`0${i + 1}`}</div>
+                <h3 className="card__title">{t}</h3>
+                <p className="card__desc">{d}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* GUIDE */}
-      <section ref={refs.guide} id="guide" className="section-wrap">
-        <div className="bg" style={{ backgroundImage: "url(/assets/sections/guide.jpg)" }} />
-        <div className="scrim" />
-        <div className="grain" />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-28">
-          <h2 className="section-title text-4xl md:text-5xl">이용 가이드</h2>
-          <div className="mt-12 grid lg:grid-cols-3 gap-6">
+      {/* PROGRAMS */}
+      <section ref={refs.programs} data-id="programs" className="section">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/programs.jpg)" }} />
+        <div className="section__inner">
+          <h2 className="section__title reveal">프로그램</h2>
+          <div className="grid grid-3 mt-24">
             {[
-              { n: "01", t: "우주 탐험", d: "3D 공간에서 항성/행성을 탐험하고 마음에 드는 곳을 찾으세요." },
-              { n: "02", t: "구역 구매", d: "행성의 픽셀 구역을 구매하여 나만의 영토로." },
-              { n: "03", t: "픽셀 창작", d: "픽셀 에디터로 작품을 전시하고 공유하세요." },
-            ].map((s) => (
-              <div key={s.n} className="card-glass p-6 relative overflow-hidden">
-                <div className="text-cyan-300 font-bold">{s.n}</div>
-                <div className="text-2xl font-extrabold">{s.t}</div>
-                <p className="mt-3 text-white/80">{s.d}</p>
-                <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-cyan-400/12 blur-2xl" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-10">
-            <button className="btn-glow" onClick={handleEnter}>
-              지금 3D 입장
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* GALLERY */}
-      <section ref={refs.gallery} id="gallery" className="section-wrap">
-        <div className="bg" style={{ backgroundImage: "url(/assets/sections/gallery.jpg)" }} />
-        <div className="scrim" />
-        <div className="grain" />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-28">
-          <div className="flex items-end justify-between">
-            <h2 className="section-title text-4xl md:text-5xl">갤러리</h2>
-            <button className="btn-ghost">전체 보기</button>
-          </div>
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="thumb bg-gradient-to-br from-cyan-400/20 to-fuchsia-400/10" />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TEAM */}
-      <section ref={refs.team} id="team" className="section-wrap">
-        <div className="bg" style={{ backgroundImage: "url(/assets/sections/team.jpg)" }} />
-        <div className="scrim" />
-        <div className="grain" />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-28">
-          <h2 className="section-title text-4xl md:text-5xl">팀 소개</h2>
-          <p className="mt-3 text-white/80">동아대학교 SW중심대학사업 D-Lab · CELESTIA 팀</p>
-          <div className="mt-10 grid md:grid-cols-4 gap-6">
-            {[
-              { n: "김남형", r: "팀장 (기관 참여)" },
-              { n: "조영준", r: "프론트엔드" },
-              { n: "정권호", r: "백엔드" },
-              { n: "모준호", r: "백엔드" },
-            ].map((m) => (
-              <div key={m.n} className="card-glass p-6">
-                <div className="h-28 rounded-xl bg-white/10 mb-4" />
-                <div className="text-xl font-bold">{m.n}</div>
-                <div className="text-white/75">{m.r}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SHOP */}
-      <section ref={refs.shop} id="shop" className="section-wrap">
-        <div className="bg" style={{ backgroundImage: "url(/assets/sections/shop.jpg)" }} />
-        <div className="scrim" />
-        <div className="grain" />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-28">
-          <h2 className="section-title text-4xl md:text-5xl">구매창</h2>
-          <p className="mt-3 text-white/80">행성 구역(픽셀)을 구매하고 소유권을 획득하세요.</p>
-          <div className="mt-10 grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Starter", price: "₩9,900", feat: ["구역 10×10", "기본 뱃지"] },
-              { name: "Creator", price: "₩29,900", feat: ["구역 20×20", "프로 뱃지", "확장 팔레트"] },
-              { name: "Legend", price: "₩79,900", feat: ["구역 40×40", "레전드 뱃지", "특수 이펙트"] },
-            ].map((p, i) => (
-              <div key={i} className="card-glass p-6 flex flex-col">
-                <div className="text-2xl font-bold">{p.name}</div>
-                <div className="mt-2 text-3xl font-extrabold">{p.price}</div>
-                <ul className="mt-4 space-y-2 text-white/85">
-                  {p.feat.map((f, idx) => (
-                    <li key={idx}>• {f}</li>
+              ["Starter", "₩9,900", ["구역 10×10", "기본 뱃지"]],
+              ["Creator", "₩29,900", ["구역 20×20", "프로 뱃지", "확장 팔레트"]],
+              ["Legend", "₩79,900", ["구역 40×40", "레전드 뱃지", "특수 이펙트"]],
+            ].map(([name, price, feat], i) => (
+              <div key={name} className={`card-glass p-20 reveal delay-${i}`}>
+                <div className="plan__name">{name}</div>
+                <div className="plan__price">{price}</div>
+                <ul className="card__list mt-12">
+                  {feat.map((f) => (
+                    <li key={f}>{f}</li>
                   ))}
                 </ul>
-                <button className="btn-glow mt-6" onClick={() => alert(`[${p.name}] 플랜 구매`)}>
+                <button className="btn-glow mt-20" onClick={() => alert(`[${name}] 플랜 구매`)}>
                   구매하기
                 </button>
               </div>
@@ -180,8 +151,52 @@ export default function SplashPage({ onEnter }) {
         </div>
       </section>
 
-      {/* 로그인 모달 */}
-      <Modal title="로그인" isOpen={modal === "login"} onClose={() => setModal(null)} />
-    </div>
+      {/* GALLERY */}
+      <section ref={refs.gallery} data-id="gallery" className="section dark">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/gallery.jpg)" }} />
+        <div className="section__inner">
+          <div className="row between center reveal">
+            <h2 className="section__title">갤러리</h2>
+            <button className="btn-outline">전체 보기</button>
+          </div>
+          <div className="masonry mt-24">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="masonry__item reveal"
+                style={{ backgroundImage: `url(/assets/sections/gal_${(i % 5) + 1}.jpg)` }}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section ref={refs.contact} data-id="contact" className="section">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/contact.jpg)" }} />
+        <div className="section__inner center reveal">
+          <h2 className="section__title">문의하기</h2>
+          <p className="section__desc">협업/스폰서십/교육 프로그램 문의 환영합니다.</p>
+          <div className="row center mt-16">
+            <a className="btn-outline" href="mailto:team@celestia.app">
+              team@celestia.app
+            </a>
+            <button className="btn-glow ml-12" onClick={handleEnter}>
+              3D 우주로 이동
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <div className="footer__inner">
+          <div className="footer__brand">CELESTIA</div>
+          <div className="footer__copy">© {new Date().getFullYear()} Celestia Team. All rights reserved.</div>
+        </div>
+      </footer>
+
+      {/* ✅ 로그인 모달: “전에 쓰던” Modal 그대로 */}
+      <Modal title="로그인" isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+    </>
   );
 }
