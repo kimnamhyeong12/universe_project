@@ -1,0 +1,211 @@
+/* ─────────────────────────────────────────────
+   CELESTIA Landing (Splash) Scoped Styles
+   모든 룰은 .splash 아래에서만 동작합니다.
+   ───────────────────────────────────────────── */
+
+.splash {
+  --cel-bg: #06090f;
+  --cel-text: #eaf6ff;
+  --cel-dim: rgba(255, 255, 255, 0.72);
+  --cel-cyan: #00f0ff;
+  --cel-blue: #6aa8ff;
+  --cel-indigo: #8c6bff;
+  --cel-gradient: linear-gradient(135deg, var(--cel-cyan), var(--cel-blue) 45%, var(--cel-indigo));
+  color: var(--cel-text);
+}
+
+/* 베이스 리셋(스코프 내부만) */
+.splash * {
+  box-sizing: border-box;
+}
+
+/* 네비게이션 유리 효과 */
+.splash .nav-glass {
+  background: rgba(10, 16, 25, 0.45);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px -20px rgba(0, 0, 0, .6);
+}
+
+/* 큰 타이틀 (그라디언트 텍스트) */
+.splash .heading-hero {
+  line-height: 1.05;
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, #eaf6ff, #a7c6ff 55%, #89a3ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+
+/* 서브타이틀 */
+.splash .sub-hero {
+  color: rgba(234, 246, 255, .9);
+  text-shadow: 0 8px 40px rgba(0,0,0,.35);
+}
+
+/* 메인 CTA 버튼: 빛이 차오르는 느낌 */
+.splash .btn-glow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  padding: 0.95rem 2.4rem;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #0b0f16;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(120% 160% at 50% 180%, #ffffff 0%, #cbe9ff 40%, #97c8ff 70%, #5aa4ff 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.35),
+    0 14px 50px -20px rgba(127, 194, 255, .7);
+  transition: transform .22s ease, box-shadow .3s ease, filter .3s ease;
+}
+
+.splash .btn-glow::before {
+  content: "";
+  position: absolute;
+  inset: -40% -40%;
+  background: conic-gradient(from 180deg, rgba(255,255,255,.0), rgba(255,255,255,.45), rgba(255,255,255,.0));
+  filter: blur(16px);
+  opacity: .0;
+  transform: rotate(0deg);
+  transition: opacity .4s ease, transform .8s linear;
+  z-index: -1;
+}
+
+.splash .btn-glow:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.55),
+    0 26px 80px -24px rgba(120, 200, 255, .9);
+}
+
+.splash .btn-glow:hover::before {
+  opacity: .8;
+  transform: rotate(360deg);
+}
+
+/* 서브 버튼(유리 느낌) */
+.splash .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 999px;
+  color: var(--cel-text);
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: background .2s ease, transform .2s ease, border-color .2s ease;
+}
+.splash .btn-ghost:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.28);
+}
+
+/* 카드(홈 한정) — 유니버스의 .card-glass와 충돌 방지 */
+.splash .card-glass {
+  background: rgba(8, 19, 30, 0.55);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255, .12);
+  border-radius: 16px;
+  box-shadow:
+    0 0 40px -10px rgba(0, 170, 255, 0.35),
+    inset 0 0 30px rgba(0, 140, 255, 0.05);
+}
+
+/* 섹션 공통 래퍼 + 배경 이미지 */
+.splash .section-wrap {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(1200px 800px at 50% -20%, rgba(0, 140, 255, .16), transparent 70%), var(--cel-bg);
+}
+
+.splash .section-wrap > .bg {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  opacity: .25;
+  transform: scale(1.04);
+  filter: saturate(1.05) contrast(1.02) brightness(.92);
+}
+
+/* 배경 위 가독성 스크림 */
+.splash .section-wrap > .scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(1000px 600px at 50% 0%, rgba(0,0,0,.55), transparent 60%),
+              linear-gradient(to bottom, rgba(6,9,15,.65), rgba(6,9,15,.8) 60%, rgba(6,9,15, .92));
+}
+
+/* 필름 그레인 살짝 */
+.splash .grain {
+  position: absolute;
+  inset: 0;
+  opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* 썸네일 */
+.splash .thumb {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.35);
+}
+
+/* 작은 칩 */
+.splash .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .4rem .75rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--cel-dim);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+/* 섹션 타이틀 */
+.splash .section-title {
+  font-weight: 900;
+  letter-spacing: .02em;
+  text-shadow: 0 12px 60px rgba(0,0,0,.5);
+}
+
+/* 구분선 */
+.splash .hr-neon {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,255,.4), transparent);
+  border: 0;
+}
+
+/* 반응형 스케일 */
+@media (max-width: 1024px) {
+  .splash .heading-hero { font-size: clamp(42px, 7vw, 92px); }
+}
+@media (min-width: 1025px) {
+  .splash .heading-hero { font-size: clamp(72px, 9vw, 152px); }
+}
