@@ -1,0 +1,91 @@
+/* 유리 느낌 카드 + 안개 그림자 */
+.card-glass {
+  background: rgba(8, 19, 30, 0.55);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  border-radius: 16px;
+  box-shadow: 0 0 40px -10px rgba(0, 255, 255, 0.45),
+              inset 0 0 30px rgba(0, 255, 255, 0.05);
+}
+.cel-hud { border: 1px solid rgba(0, 255, 255, 0.25); border-radius: 14px; }
+
+/* 네온 보더(회전 제거: 고정 글로우만) */
+.neon-border { position: relative; isolation: isolate; }
+.neon-border::before {
+  content: none;
+}
+
+/* 네온 버튼 */
+.btn-neo {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,255,255,.25);
+  background: linear-gradient(180deg, rgba(0,255,255,.15), rgba(0,255,255,.06));
+  color: #e7fbff;
+  font-weight: 700;
+  letter-spacing: .02em;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+  box-shadow: 0 0 20px -6px rgba(0,255,255,.45), inset 0 0 14px rgba(0,255,255,.05);
+}
+.btn-neo:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px -6px rgba(0,255,255,.7), inset 0 0 18px rgba(0,255,255,.08);
+  background: linear-gradient(180deg, rgba(0,255,255,.22), rgba(0,255,255,.10));
+}
+
+/* 큰 버튼 변형 */
+.btn-neo--lg { padding: 16px 18px; font-size: 1.05rem; border-radius: 12px; }
+
+/* 고스트 버튼 */
+.btn-ghost {
+  color: #9deaff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(157,234,255,.25);
+}
+.btn-ghost:hover { color: white; border-color: rgba(157,234,255,.5); }
+
+/* 우측 슬라이드 (폭 확대) */
+.detail-wrap {
+  position: absolute; top: 0; right: 0; height: 100%;
+  width: 520px;                     /* 420px → 520px */
+  transform: translateX(100%);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1);
+  z-index: 20;
+}
+.detail-wrap.open { transform: translateX(0); }
+.detail-panel { height: 100%; padding: 26px; border-left: 1px solid rgba(0,255,255,.15); }
+
+/* 탭 */
+.tabs { display: flex; gap: 10px; }
+.tab {
+  padding: 10px 14px; border-radius: 12px; font-weight: 700; letter-spacing: .02em;
+  border: 1px solid rgba(0,255,255,.2); color: #bff6ff; background: rgba(0,255,255,.08);
+}
+.tab:hover { background: rgba(0,255,255,.14); }
+.tab.active {
+  background: rgba(0,255,255,.22); color: white;
+  border-color: rgba(0,255,255,.5);
+  box-shadow: 0 0 22px -6px rgba(0,255,255,.55);
+}
+
+/* 이미지 썸네일 */
+.thumb {
+  width: 100%; aspect-ratio: 16/10; border-radius: 12px;
+  background-size: cover; background-position: center;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.35);
+}
+
+/* 세로 길게(뷰포트 높이 따라가고 내부 스크롤) */
+.panel-tall {
+  max-height: calc(100vh - 180px);
+  overflow: auto;
+}
+
+/* 좁은 패널 전용 여백 */
+.panel-narrow .btn-neo { margin-top: 10px; }
+
+html { scroll-behavior: smooth; }

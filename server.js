@@ -9,6 +9,9 @@ const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const crypto = require("crypto");
+const payment = require("./routes/payment");
+const market = require("./routes/market");
+
 
 // ======== 환경 변수 로드 ========
 dotenv.config();
@@ -71,6 +74,9 @@ app.use("/api/galaxies", galaxyRoutes);
 app.use("/api/stars", starRoutes);
 app.use("/api/blackholes", blackholeRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/payments", payment);
+app.use("/api/market", market);
+
 
 // ======== 인증서 및 정적 파일 공개 ========
 app.use("/certs", express.static(path.join(__dirname, "certs")));
