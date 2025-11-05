@@ -408,6 +408,14 @@ export default function Universe() {
           <div className="card-glass px-4 py-2 text-red-300">{error}</div>
         </div>
       )}
+      <div className="fixed bottom-6 right-6 z-30">
+        <button
+          className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md text-white text-sm font-semibold flex items-center gap-2 shadow-lg transition"
+          onClick={() => window.location.href = '/market'}
+        >
+          🛒 마켓으로 이동
+        </button>
+      </div>
     </div>
   );
 }
