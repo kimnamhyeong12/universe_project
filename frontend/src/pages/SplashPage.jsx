@@ -1,8 +1,9 @@
+// src/pages/SplashPage.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader.jsx";
-import Modal from "../components/Modal.jsx";         // ✅ 기존 로그인 모달 재사용
-import { useAuth } from "../context/AuthContext";    // ✅ 로그인 성공 시 반영
+import Modal from "../components/Modal.jsx";
+import { useAuth } from "../context/AuthContext";
 import "../styles/landing.css";
 
 export default function SplashPage({ onEnter }) {
@@ -10,7 +11,6 @@ export default function SplashPage({ onEnter }) {
   const auth = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
 
-  // 헤더에서 “로그인” 클릭 시 열리도록 global 이벤트 바인딩
   useEffect(() => {
     const open = () => setLoginOpen(true);
     window.addEventListener("celestia:open-login", open);
@@ -26,7 +26,6 @@ export default function SplashPage({ onEnter }) {
     contact: useRef(null),
   };
 
-  // 히어로 패럴랙스
   useEffect(() => {
     const hero = refs.home.current;
     if (!hero) return;
@@ -40,11 +39,10 @@ export default function SplashPage({ onEnter }) {
     return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
-  // 섹션 reveal
   useEffect(() => {
     const els = document.querySelectorAll(".reveal");
     const io = new IntersectionObserver(
-      (es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("reveal--show")),
+      (entries) => entries.forEach((en) => en.isIntersecting && en.target.classList.add("reveal--show")),
       { threshold: 0.2 }
     );
     els.forEach((el) => io.observe(el));
@@ -53,27 +51,37 @@ export default function SplashPage({ onEnter }) {
 
   const handleEnter = () => (onEnter ? onEnter() : nav("/universe"));
 
+  // ✅ 마켓 페이지로 이동 (선택 플랜 전달)
+  const gotoMarket = (planName) => {
+    nav("/market", { state: { plan: planName } });
+  };
+
   return (
     <>
       <SiteHeader anchors={refs} />
 
       {/* HERO */}
-      <section ref={refs.home} data-id="home" className="hero">
-        <video className="hero__bg" autoPlay muted loop playsInline>
-          <source src="/celestia_bg.mp4" type="video/mp4" />
-        </video>
-        <div className="hero__scrim" />
-        <div className="hero__stars" />
-        <div className="hero__inner">
-          <h1 className="hero__title">CELESTIA</h1>
-          <p className="hero__subtitle">나만의 우주를 소유하고, 창조하세요.</p>
-          <div className="hero__cta">
-            <button className="btn-glow btn-xl" onClick={handleEnter}>
-              CELESTIA 입장하기
-            </button>
-          </div>
-        </div>
-      </section>
+<section ref={refs.home} data-id="home" className="hero">
+  <video className="hero__bg" autoPlay muted loop playsInline>
+    <source src="/celestia_bg.mp4" type="video/mp4" />
+  </video>
+
+  {/* 어둡게 덮는 레이어들 */}
+  <div className="hero__scrim" />
+  <div className="hero__stars" />
+
+  {/* 콘텐츠 레이어(최상단) */}
+  <div className="hero__inner">
+    <h1 className="hero__title">CELESTIA</h1>
+    <p className="hero__subtitle">나만의 우주를 소유하고, 창조하세요.</p>
+
+    {/* ✅ 입장 버튼 (콘텐츠 레이어 내부 + z-index 보장) */}
+    <button className="btn-glow btn-xl hero__enter" onClick={handleEnter}>
+      CELESTIA 입장하기
+    </button>
+  </div>
+</section>
+
 
       {/* ABOUT */}
       <section ref={refs.about} data-id="about" className="section">
@@ -123,7 +131,7 @@ export default function SplashPage({ onEnter }) {
         </div>
       </section>
 
-      {/* PROGRAMS */}
+      {/* PROGRAMS (구매창) */}
       <section ref={refs.programs} data-id="programs" className="section">
         <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/programs.jpg)" }} />
         <div className="section__inner">
@@ -142,7 +150,7 @@ export default function SplashPage({ onEnter }) {
                     <li key={f}>{f}</li>
                   ))}
                 </ul>
-                <button className="btn-glow mt-20" onClick={() => alert(`[${name}] 플랜 구매`)}>
+                <button className="btn-glow mt-20" onClick={() => gotoMarket(name)}>
                   구매하기
                 </button>
               </div>
@@ -195,7 +203,6 @@ export default function SplashPage({ onEnter }) {
         </div>
       </footer>
 
-      {/* ✅ 로그인 모달: “전에 쓰던” Modal 그대로 */}
       <Modal title="로그인" isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );
