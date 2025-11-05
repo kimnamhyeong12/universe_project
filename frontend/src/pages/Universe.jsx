@@ -327,7 +327,7 @@ function CameraController({ target, track = true, onArrived }) {
 }
 
 /* ----------------------------- Main ----------------------------- */
-export default function Universe({ onMarketClick }) {
+export default function Universe() {
   const auth = useAuth();
   const [stars, setStars] = useState([]);
   const [planets, setPlanets] = useState([]);
@@ -400,27 +400,14 @@ export default function Universe({ onMarketClick }) {
           onClose={() => { setSelected(null); setOpenDetail(false); }}
           onOpenDetail={() => setOpenDetail(true)}
         />
-     
       )}
-
-      <DetailSlide
-        open={openDetail}
-        data={selected}
-        onClose={() => setOpenDetail(false)}
-      />
+      <DetailSlide open={openDetail} data={selected} onClose={() => setOpenDetail(false)} />
 
       {error && (
         <div className="absolute top-5 left-1/2 -translate-x-1/2 z-30">
           <div className="card-glass px-4 py-2 text-red-300">{error}</div>
         </div>
       )}
-
-      {/* ----------------------------- 마켓으로 이동 버튼 ----------------------------- */}
-      <div className="absolute bottom-6 right-6 z-30">
-        <button className="btn-neo btn-neo--lg" onClick={onMarketClick}>
-          🛒 마켓으로 이동
-        </button>
-      </div>
     </div>
   );
 }
