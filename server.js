@@ -62,6 +62,7 @@ const galaxyRoutes = require("./routes/galaxy");
 const starRoutes = require("./routes/star");
 const blackholeRoutes = require("./routes/blackhole");
 const certificateRoutes = require("./routes/certificate");
+const marketRoutes = require("./routes/market"); // ✅ 마켓 라우트 추가
 
 // ======== 라우트 연결 ========
 app.use("/api/auth", authRoutes);
@@ -71,6 +72,7 @@ app.use("/api/galaxies", galaxyRoutes);
 app.use("/api/stars", starRoutes);
 app.use("/api/blackholes", blackholeRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/market", marketRoutes); // ✅ 마켓 라우트 연결
 
 // ======== 인증서 및 정적 파일 공개 ========
 app.use("/certs", express.static(path.join(__dirname, "certs")));
