@@ -1,85 +1,209 @@
-import React, { useState } from 'react';
-import MainHeader from '../components/MainHeader.jsx';
-import Modal from '../components/Modal.jsx';
-// =============================================================
-// 4) 스플래시 페이지: 배경 영상 + 모달 관리
-// =============================================================
-const SplashPage = ({ onEnter }) => {
-  const [modalContent, setModalContent] = useState(null); // 어떤 모달을 띄울지 상태 관리
-  const openModal = (type) => setModalContent(type);
-  const closeModal = () => setModalContent(null);
+// src/pages/SplashPage.jsx
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SiteHeader from "../components/SiteHeader.jsx";
+import Modal from "../components/Modal.jsx";
+import { useAuth } from "../context/AuthContext";
+import "../styles/landing.css";
+
+export default function SplashPage({ onEnter }) {
+  const nav = useNavigate();
+  const auth = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  useEffect(() => {
+    const open = () => setLoginOpen(true);
+    window.addEventListener("celestia:open-login", open);
+    return () => window.removeEventListener("celestia:open-login", open);
+  }, []);
+
+  const refs = {
+    home: useRef(null),
+    about: useRef(null),
+    capability: useRef(null),
+    programs: useRef(null),
+    gallery: useRef(null),
+    contact: useRef(null),
+  };
+
+  useEffect(() => {
+    const hero = refs.home.current;
+    if (!hero) return;
+    const onMove = (e) => {
+      const x = (e.clientX - window.innerWidth / 2) / window.innerWidth;
+      const y = (e.clientY - window.innerHeight / 2) / window.innerHeight;
+      hero.style.setProperty("--mx", `${x}`);
+      hero.style.setProperty("--my", `${y}`);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, []);
+
+  useEffect(() => {
+    const els = document.querySelectorAll(".reveal");
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((en) => en.isIntersecting && en.target.classList.add("reveal--show")),
+      { threshold: 0.2 }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  const handleEnter = () => (onEnter ? onEnter() : nav("/universe"));
+
+  // ✅ 마켓 페이지로 이동 (선택 플랜 전달)
+  const gotoMarket = (planName) => {
+    nav("/market", { state: { plan: planName } });
+  };
 
   return (
     <>
-      <MainHeader onModalOpen={openModal} />
+      <SiteHeader anchors={refs} />
 
-      {/* 상단 큰 배경 (비디오) */}
-      <div className="w-screen h-screen relative flex items-center justify-center text-white overflow-hidden">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover z-[1]"
-        >
-          <source src="/celestia_bg.mp4" type="video/mp4" />
-          브라우저가 비디오 태그를 지원하지 않습니다.
-        </video>
-        <div className="absolute inset-0 w-full h-full bg-black/60 z-[2]" />
+      {/* HERO */}
+<section ref={refs.home} data-id="home" className="hero">
+  <video className="hero__bg" autoPlay muted loop playsInline>
+    <source src="/celestia_bg.mp4" type="video/mp4" />
+  </video>
 
-        {/* 중앙 타이틀/버튼 */}
-        <div className="relative z-[3] text-center animate-fadeIn">
-          <h1 className="text-7xl md:text-8xl font-black tracking-wide" style={{ fontFamily: "'Inter', sans-serif" }}>
-            CELESTIA
-          </h1>
-          <p className="text-xl md:text-2xl mt-4 mb-10 opacity-90">나만의 우주를 소유하고, 창조하세요.</p>
-          <button
-            className="text-lg font-bold uppercase tracking-wider bg-transparent border-2 border-white rounded-full px-12 py-4 hover:bg-white hover:text-black hover:shadow-2xl hover:shadow-white/50 transition-all duration-300"
-            onClick={onEnter} // 클릭 시 다음 화면으로 이동(로딩 → 앱)
-          >
-            CELESTIA 입장하기
-          </button>
+  {/* 어둡게 덮는 레이어들 */}
+  <div className="hero__scrim" />
+  <div className="hero__stars" />
+
+  {/* 콘텐츠 레이어(최상단) */}
+  <div className="hero__inner">
+    <h1 className="hero__title">CELESTIA</h1>
+    <p className="hero__subtitle">나만의 우주를 소유하고, 창조하세요.</p>
+
+    {/* ✅ 입장 버튼 (콘텐츠 레이어 내부 + z-index 보장) */}
+    <button className="btn-glow btn-xl hero__enter" onClick={handleEnter}>
+      CELESTIA 입장하기
+    </button>
+  </div>
+</section>
+
+
+      {/* ABOUT */}
+      <section ref={refs.about} data-id="about" className="section">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/about.jpg)" }} />
+        <div className="section__inner">
+          <div className="grid grid-2">
+            <div className="reveal">
+              <h2 className="section__title">CELESTIA란?</h2>
+              <p className="section__desc">
+                CELESTIA는 디지털 우주에서 <b>소유</b>와 <b>창작</b>을 결합한 프리미엄 인터랙션입니다.
+                행성 구역을 소유하고, 픽셀 아트로 우주를 채우세요.
+              </p>
+              <div className="hr-neon" />
+            </div>
+            <div className="reveal delay-1">
+              <div className="card-glass p-24">
+                <h3 className="card__title">핵심 가치</h3>
+                <ul className="card__list">
+                  <li>소유권 중심의 지속성</li>
+                  <li>크리에이터 퍼스트 도구</li>
+                  <li>전시 · 교류 · 거래 생태계</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* 모달들: title에 따라 내용 변경 */}
-      <Modal title="CELESTIA 란?" isOpen={modalContent === 'about'} onClose={closeModal}>
-        <p>CELESTIA는 가상의 우주 공간 속에서 자신만의 영역을 소유하고 표현하려는 현대인의 욕구를 충족시키기 위해 탄생했습니다.</p>
-        <p>기존의 상징적 소유(루나엠버시)나 단순 창작(WPLACE)을 넘어, <strong>소유와 창작을 결합</strong>한 인터랙티브 경험을 제공합니다. 여러분은 디지털 우주 속 행성의 특정 구역을 구매하고, 해당 영역에 직접 픽셀 아트를 제작하여 자신을 표현할 수 있습니다.</p>
-      </Modal>
-
-      <Modal title="이용 가이드" isOpen={modalContent === 'guide'} onClose={closeModal}>
-        <ul className="list-none space-y-4">
-          <li><strong className="text-cyan-300 block text-xl">1단계: 우주 탐험</strong>[CELESTIA 입장하기]를 눌러 3D 우주 공간을 탐험합니다.</li>
-          <li><strong className="text-cyan-300 block text-xl">2단계: 행성 선택 및 구역 구매</strong>"창작의 행성"을 찾아 착륙(줌인)하고, 원하는 픽셀 구역을 선택하여 자신만의 영토로 만듭니다.</li>
-          <li><strong className="text-cyan-300 block text-xl">3단계: 픽셀 아트 창작</strong>구매한 영토에 픽셀 에디터를 사용하여 자유롭게 자신만의 예술 작품을 창조하고 전시합니다.</li>
-        </ul>
-      </Modal>
-
-      <Modal title="갤러리" isOpen={modalContent === 'gallery'} onClose={closeModal}>
-        <p>현재 다른 창조자들이 만든 멋진 픽셀 아트 작품들을 준비 중입니다. (추후 기능 구현)</p>
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="bg-slate-700/50 h-32 rounded animate-pulse"></div>
-          <div className="bg-slate-700/50 h-32 rounded animate-pulse"></div>
-          <div className="bg-slate-700/50 h-32 rounded animate-pulse"></div>
+      {/* CAPABILITY */}
+      <section ref={refs.capability} data-id="capability" className="section dark">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/capability.jpg)" }} />
+        <div className="section__inner">
+          <h2 className="section__title reveal">기술 역량</h2>
+          <div className="grid grid-3 mt-24">
+            {[
+              ["Cinematic 3D", "React Three Fiber + postprocessing 시네마틱 연출"],
+              ["Orbit System", "자전/공전 · 카메라 스냅/팔로우"],
+              ["Pixel Studio", "Konva 기반 고성능 픽셀 에디터"],
+            ].map(([t, d], i) => (
+              <div key={t} className={`card-glass p-20 reveal delay-${i}`}>
+                <div className="badge">CAP {`0${i + 1}`}</div>
+                <h3 className="card__title">{t}</h3>
+                <p className="card__desc">{d}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </Modal>
+      </section>
 
-      <Modal title="팀 소개" isOpen={modalContent === 'team'} onClose={closeModal}>
-        <p>저희는 동아대학교 SW중심대학사업 D-Lab 소속 CELESTIA 팀입니다.</p>
-        <ul className="list-none space-y-2 mt-4">
-          <li><b>팀장 (기관 참여):</b> 김남형</li>
-          <li><b>프론트엔드:</b> 조영준</li>
-          <li><b>백엔드:</b> 정권호</li>
-          <li><b>백엔드:</b> 모준호</li>
-        </ul>
-      </Modal>
+      {/* PROGRAMS (구매창) */}
+      <section ref={refs.programs} data-id="programs" className="section">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/programs.jpg)" }} />
+        <div className="section__inner">
+          <h2 className="section__title reveal">프로그램</h2>
+          <div className="grid grid-3 mt-24">
+            {[
+              ["Starter", "₩9,900", ["구역 10×10", "기본 뱃지"]],
+              ["Creator", "₩29,900", ["구역 20×20", "프로 뱃지", "확장 팔레트"]],
+              ["Legend", "₩79,900", ["구역 40×40", "레전드 뱃지", "특수 이펙트"]],
+            ].map(([name, price, feat], i) => (
+              <div key={name} className={`card-glass p-20 reveal delay-${i}`}>
+                <div className="plan__name">{name}</div>
+                <div className="plan__price">{price}</div>
+                <ul className="card__list mt-12">
+                  {feat.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+                <button className="btn-glow mt-20" onClick={() => gotoMarket(name)}>
+                  구매하기
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      {/* 로그인/회원가입 모달 */}
-      <Modal title="로그인" isOpen={modalContent === 'login'} onClose={closeModal} />
+      {/* GALLERY */}
+      <section ref={refs.gallery} data-id="gallery" className="section dark">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/gallery.jpg)" }} />
+        <div className="section__inner">
+          <div className="row between center reveal">
+            <h2 className="section__title">갤러리</h2>
+            <button className="btn-outline">전체 보기</button>
+          </div>
+          <div className="masonry mt-24">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="masonry__item reveal"
+                style={{ backgroundImage: `url(/assets/sections/gal_${(i % 5) + 1}.jpg)` }}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section ref={refs.contact} data-id="contact" className="section">
+        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/contact.jpg)" }} />
+        <div className="section__inner center reveal">
+          <h2 className="section__title">문의하기</h2>
+          <p className="section__desc">협업/스폰서십/교육 프로그램 문의 환영합니다.</p>
+          <div className="row center mt-16">
+            <a className="btn-outline" href="mailto:team@celestia.app">
+              team@celestia.app
+            </a>
+            <button className="btn-glow ml-12" onClick={handleEnter}>
+              3D 우주로 이동
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <div className="footer__inner">
+          <div className="footer__brand">CELESTIA</div>
+          <div className="footer__copy">© {new Date().getFullYear()} Celestia Team. All rights reserved.</div>
+        </div>
+      </footer>
+
+      <Modal title="로그인" isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );
-};
-
-
-export default SplashPage;
+}

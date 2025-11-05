@@ -87,3 +87,5 @@
 
 /* 좁은 패널 전용 여백 */
 .panel-narrow .btn-neo { margin-top: 10px; }
+
+html { scroll-behavior: smooth; }
