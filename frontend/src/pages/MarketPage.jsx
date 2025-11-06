@@ -1,14 +1,14 @@
+// src/pages/MarketPage.jsx
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext"; // 🔑 전역 인증 상태 불러오기
-import "./Market.css"; // 🎨 마켓 스타일 불러오기
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";  // 🔑 전역 인증
+import "../styles/Market.css";                      // 🎨 마켓 스타일
 
-// =============================================================
-// 6) 마켓 페이지 컴포넌트
-// =============================================================
-export default function Market({ onBackClick }) {
-  const { user } = useAuth(); // 🔑 현재 로그인한 사용자 정보 (token 포함)
-  const [assets, setAssets] = useState([]); // 🔭 판매 중인 자산들
-  const [loading, setLoading] = useState(true); // ⏳ 로딩 상태
+export default function MarketPage() {
+  const nav = useNavigate();
+  const { user } = useAuth();          // { token, username, ... }
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // 🔄 마켓 자산 로딩
   useEffect(() => {
@@ -17,21 +17,19 @@ export default function Market({ onBackClick }) {
         const res = await fetch("http://localhost:5000/api/market");
         const data = await res.json();
 
-        // 🎯 모든 자산 배열에 타입을 명시해 통합
         const all = [
-          ...data.planets.map((a) => ({ ...a, type: "Planet" })),
-          ...data.stars.map((a) => ({ ...a, type: "Star" })),
-          ...data.galaxies.map((a) => ({ ...a, type: "Galaxy" })),
-          ...data.blackholes.map((a) => ({ ...a, type: "Blackhole" })),
+          ...(data.planets || []).map((a) => ({ ...a, type: "Planet" })),
+          ...(data.stars || []).map((a) => ({ ...a, type: "Star" })),
+          ...(data.galaxies || []).map((a) => ({ ...a, type: "Galaxy" })),
+          ...(data.blackholes || []).map((a) => ({ ...a, type: "Blackhole" })),
         ];
-        setAssets(all); // 🎉 자산 저장
+        setAssets(all);
       } catch (err) {
         console.error("❌ 마켓 데이터 불러오기 실패:", err);
       } finally {
-        setLoading(false); // ✅ 로딩 완료
+        setLoading(false);
       }
     }
-
     fetchMarket();
   }, []);
 
@@ -41,20 +39,17 @@ export default function Market({ onBackClick }) {
       alert("로그인이 필요합니다.");
       return;
     }
-
     try {
       const res = await fetch("http://localhost:5000/api/market/buy", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`, // 🔐 사용자 토큰 전달
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({ assetType: type, assetId: id }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "구매 요청 실패");
-
       alert(`✅ ${name} 구매 요청이 성공적으로 접수되었습니다.`);
     } catch (err) {
       console.error(err);
@@ -62,15 +57,15 @@ export default function Market({ onBackClick }) {
     }
   };
 
-  // 📦 렌더링
   return (
     <div className="market-page">
       <h1>🌌 Universe Market</h1>
 
-      {/* 🔙 우주로 돌아가는 버튼 */}
-      <button className="back-btn" onClick={onBackClick}>
-        ← 우주로 돌아가기
-      </button>
+      {/* 🔙 네비게이션 버튼들 */}
+      <div className="mt-8 flex gap-12">
+        <button className="btn-outline" onClick={() => nav(-1)}>뒤로가기</button>
+        <button className="btn-glow" onClick={() => nav("/universe")}>우주 들어가기</button>
+      </div>
 
       {/* ⏳ 로딩 / ❌ 자산 없음 / ✅ 자산 목록 */}
       {loading ? (
@@ -81,14 +76,11 @@ export default function Market({ onBackClick }) {
         <div className="market-grid">
           {assets.map((asset) => (
             <div key={asset._id} className="item-card">
-              {/* 자산 이미지 */}
               <img
                 src={asset.imageUrl || "/default_space.jpg"}
                 alt={asset.name}
                 className="item-image"
               />
-
-              {/* 자산 정보 */}
               <div className="item-info">
                 <div className="item-type">{asset.type}</div>
                 <div className="item-name">{asset.name}</div>
@@ -97,7 +89,6 @@ export default function Market({ onBackClick }) {
                     {asset.price.toLocaleString()} KRW
                   </div>
                 )}
-                {/* 💸 구매 버튼 */}
                 <button
                   className="buy-btn"
                   onClick={() => handleBuy(asset.type, asset._id, asset.name)}

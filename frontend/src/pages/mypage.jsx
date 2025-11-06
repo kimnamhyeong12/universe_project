@@ -12,7 +12,7 @@ export default function MyPage() {
       <div className="sticky top-0 z-30 backdrop-blur-xl bg-black/30 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <Link to="/" className="font-black tracking-widest">CELESTIA</Link>
-          <Link to="/universe" className="btn btn-outline">3D로 돌아가기</Link>
+          <Link to="/universe" className="btn btn-outline">우주 들어가기</Link>
         </div>
       </div>
 
