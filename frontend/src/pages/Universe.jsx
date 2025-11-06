@@ -8,6 +8,8 @@ import {
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 import "../styles/celestia-styles.css";
+import PurchasePanel from "../components/PurchasePanel";
+import { useNavigate } from "react-router-dom"; // ✅ 추가
 
 /* ----------------------------- HUD ----------------------------- */
 function HUD({ username }) {
@@ -20,7 +22,9 @@ function HUD({ username }) {
             <div className="text-cyan-300 font-bold tracking-wide text-lg">
               환영합니다, {username}님!
             </div>
-            <div className="text-xs text-cyan-200/70">SECTOR: ORION · VISUAL MODE: ULTRA</div>
+            <div className="text-xs text-cyan-200/70">
+              SECTOR: ORION · VISUAL MODE: ULTRA
+            </div>
           </div>
         </div>
       </div>
@@ -56,16 +60,16 @@ function SaturnRings() {
 
 /* ----------------------------- Planet (공전 정지 + 자전 유지) ----------------------------- */
 function Planet({ data, onSelect, freezeOrbit = false }) {
-  const ORBIT_MULT = 2.5; // 공전 배속
-  const SPIN_MULT  = 1.4; // 자전 배속
+  const ORBIT_MULT = 2.5;
+  const SPIN_MULT = 1.4;
 
   const planetRef = useRef();
   const texture = useTexture(data.imageUrl || "/textures/planet_default.jpg");
 
   const angleRef = useRef(Math.random() * Math.PI * 2);
   const orbitRadius = data.orbitRadius || 20 + Math.random() * 10;
-  const orbitSpeed  = data.orbitSpeed  || 2.5;  // 초당 라디안
-  const spinSpeed   = 1.7;                      // 자전(초당 라디안)
+  const orbitSpeed = data.orbitSpeed || 2.5;
+  const spinSpeed = 1.7;
 
   useFrame((_, delta) => {
     if (!freezeOrbit) angleRef.current += orbitSpeed * ORBIT_MULT * delta;
@@ -74,7 +78,7 @@ function Planet({ data, onSelect, freezeOrbit = false }) {
 
     if (planetRef.current) {
       planetRef.current.position.set(x, 0, z);
-      planetRef.current.rotation.y += spinSpeed * SPIN_MULT * delta; // 자전은 항상
+      planetRef.current.rotation.y += spinSpeed * SPIN_MULT * delta;
     }
   });
 
@@ -99,7 +103,12 @@ function Planet({ data, onSelect, freezeOrbit = false }) {
           <meshStandardMaterial map={texture} />
         </Sphere>
         {isSaturn && <SaturnRings />}
-        <Text position={[0, -2.3, 0]} fontSize={0.45} color="white" anchorX="center">
+        <Text
+          position={[0, -2.3, 0]}
+          fontSize={0.45}
+          color="white"
+          anchorX="center"
+        >
           {data.name}
         </Text>
       </group>
@@ -113,13 +122,28 @@ function Star({ data, position = [0, 0, 0], onSelect }) {
   return (
     <group
       position={position}
-      onClick={() => onSelect({ ...data, type: "star", worldPos: new THREE.Vector3(...position) })}
+      onClick={() =>
+        onSelect({
+          ...data,
+          type: "star",
+          worldPos: new THREE.Vector3(...position),
+        })
+      }
     >
       <Sphere args={[3, 32, 32]}>
-        <meshStandardMaterial map={texture} emissive="yellow" emissiveIntensity={2.5} />
+        <meshStandardMaterial
+          map={texture}
+          emissive="yellow"
+          emissiveIntensity={2.5}
+        />
       </Sphere>
       <pointLight intensity={400} distance={600} color="#FFD700" />
-      <Text position={[0, -3.2, 0]} fontSize={0.5} color="yellow" anchorX="center">
+      <Text
+        position={[0, -3.2, 0]}
+        fontSize={0.5}
+        color="yellow"
+        anchorX="center"
+      >
         {data.name}
       </Text>
     </group>
@@ -134,22 +158,25 @@ function InfoBox({ label, value }) {
   return (
     <div className="bg-white/5 rounded-md px-4 py-3 border border-white/10 flex items-center justify-between">
       <span className="text-cyan-200/80 text-sm md:text-base">{label}</span>
-      <span className="text-cyan-100 font-semibold text-base md:text-lg">{value}</span>
+      <span className="text-cyan-100 font-semibold text-base md:text-lg">
+        {value}
+      </span>
     </div>
   );
 }
 
 /* ----------------------------- ObjectPanel ----------------------------- */
-function ObjectPanel({ data, onClose, onOpenDetail }) {
+function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
   const isStar = data.type === "star";
-  const posText =
-    data.worldPos
-      ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
-      : "-";
+  const navigate = useNavigate(); // ✅ 추가
+
+  const posText = data.worldPos
+    ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
+    : "-";
 
   return (
     <div className="absolute left-8 md:left-10 z-20 top-28 md:top-32">
-      <div className={"card-glass panel-tall panel-narrow w-[360px] sm:w-[380px] md:w-[400px] p-6 md:p-7"}>
+      <div className="card-glass panel-tall panel-narrow w-[360px] sm:w-[380px] md:w-[400px] p-6 md:p-7">
         {/* 헤더 */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-amber-400/70 to-yellow-200/50 shadow-[0_0_30px_-5px_rgba(255,200,0,0.8)]" />
@@ -157,7 +184,9 @@ function ObjectPanel({ data, onClose, onOpenDetail }) {
             <div className="text-[28px] md:text-[32px] font-extrabold text-white drop-shadow">
               {data.name}
             </div>
-            <div className="text-sm text-cyan-200/70">{isStar ? "항성" : data.type}</div>
+            <div className="text-sm text-cyan-200/70">
+              {isStar ? "항성" : data.type}
+            </div>
           </div>
         </div>
 
@@ -171,15 +200,27 @@ function ObjectPanel({ data, onClose, onOpenDetail }) {
 
         {/* 액션 */}
         <div className="mt-5 flex flex-col gap-3">
-          <button className="btn-neo btn-neo--lg" onClick={onOpenDetail}>정보 보기</button>
-          <button className="btn-neo btn-neo--lg" onClick={() => alert("💰 구매하기")}>구매하기</button>
-          <button className="btn-neo btn-neo--lg" onClick={() => alert("👀 구경하기")}>구경하기</button>
+          <button className="btn-neo btn-neo--lg" onClick={onOpenDetail}>
+            정보 보기
+          </button>
+          <button className="btn-neo btn-neo--lg" onClick={onBuy}>
+            구매하기
+          </button>
+          {/* ✅ 구경하기 연결 */}
+          <button
+            className="btn-neo btn-neo--lg"
+            onClick={() => navigate(`/view/${data.name}`)}
+          >
+            구경하기
+          </button>
         </div>
 
         {/* 푸터 */}
         <div className="mt-4 flex items-center justify-between text-xs text-cyan-200/70">
           <span>VER. 3.2 · HYPERDRIVE</span>
-          <button className="hover:text-white transition" onClick={onClose}>닫기 ✖</button>
+          <button className="hover:text-white transition" onClick={onClose}>
+            닫기 ✖
+          </button>
         </div>
       </div>
     </div>
@@ -189,20 +230,25 @@ function ObjectPanel({ data, onClose, onOpenDetail }) {
 /* ----------------------------- DetailSlide ----------------------------- */
 function DetailSlide({ open, data, onClose }) {
   const [tab, setTab] = useState("info");
-  const posText =
-    data?.worldPos
-      ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
-      : "-";
+  const posText = data?.worldPos
+    ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
+    : "-";
 
   return (
     <div className={`detail-wrap ${open ? "open" : ""}`}>
       <div className="detail-panel card-glass">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-xs text-cyan-200/70 uppercase tracking-widest">detail view</div>
-            <div className="text-2xl font-extrabold text-white drop-shadow">{data?.name || "-"}</div>
+            <div className="text-xs text-cyan-200/70 uppercase tracking-widest">
+              detail view
+            </div>
+            <div className="text-2xl font-extrabold text-white drop-shadow">
+              {data?.name || "-"}
+            </div>
           </div>
-          <button className="btn-ghost" onClick={onClose}>닫기 ✖</button>
+          <button className="btn-ghost" onClick={onClose}>
+            닫기 ✖
+          </button>
         </div>
 
         <div className="tabs mt-5">
@@ -254,9 +300,9 @@ function CameraController({ target, track = true, onArrived }) {
   const controlsRef = useRef();
   const { camera } = useThree();
 
-  const followingRef  = useRef(false);
+  const followingRef = useRef(false);
   const lastCamPosRef = useRef(new THREE.Vector3());
-  const offsetRef     = useRef(new THREE.Vector3());
+  const offsetRef = useRef(new THREE.Vector3());
 
   useEffect(() => {
     const controls = controlsRef.current;
@@ -335,6 +381,7 @@ export default function Universe() {
   const [openDetail, setOpenDetail] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPurchase, setShowPurchase] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -366,8 +413,7 @@ export default function Universe() {
           {!isLoading && !error && (
             <>
               {stars.map(d => (
-                <Star key={d._id} data={d} position={[0, 0, 0]}
-                  onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
               ))}
               {planets.map(d => (
                 <Planet
@@ -394,13 +440,22 @@ export default function Universe() {
 
       {auth.user && <HUD username={auth.user.username} />}
 
-      {selected && (
+      {selected && !showPurchase && (
         <ObjectPanel
           data={selected}
           onClose={() => { setSelected(null); setOpenDetail(false); }}
           onOpenDetail={() => setOpenDetail(true)}
+          onBuy={() => setShowPurchase(true)}
         />
       )}
+
+      {selected && showPurchase && (
+        <PurchasePanel
+          data={selected}
+          onBack={() => setShowPurchase(false)}
+        />
+      )}
+      
       <DetailSlide open={openDetail} data={selected} onClose={() => setOpenDetail(false)} />
 
       {error && (
@@ -411,7 +466,7 @@ export default function Universe() {
       <div className="fixed bottom-6 right-6 z-30">
         <button
           className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md text-white text-sm font-semibold flex items-center gap-2 shadow-lg transition"
-          onClick={() => window.location.href = '/market'}
+          onClick={() => (window.location.href = "/market")}
         >
           🛒 마켓으로 이동
         </button>

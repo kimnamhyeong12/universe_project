@@ -6,8 +6,12 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import SplashPage from "./pages/SplashPage.jsx";
 import LoadingScreen from "./components/LoadingScreen.jsx";
 import Universe from "./pages/Universe.jsx";
-import MyPage from "./pages/MyPage.jsx";
+import MyPage from "./pages/mypage.jsx";
 import MarketPage from "./pages/MarketPage.jsx";
+
+// ✅ PixelEditor, ViewPlanet 페이지 추가
+import PixelEditor from "./pages/PixelEditor.jsx";
+import ViewPlanet from "./pages/ViewPlanet.jsx"; // 🔥 추가 라인
 
 function LandingShell() {
   const [view, setView] = useState("splash");
@@ -42,6 +46,14 @@ export default function App() {
           <Route path="/universe" element={<Universe />} />
           <Route path="/market" element={<MarketPage />} />
           <Route path="/mypage" element={<MyPage />} />
+
+          {/* ✅ 픽셀 편집기 라우트 */}
+          <Route path="/pixel/:planet/:cellId" element={<PixelEditor />} />
+
+          {/* ✅ 구경하기 라우트 추가 */}
+          <Route path="/view/:planet" element={<ViewPlanet />} />
+
+          {/* ✅ 잘못된 경로 접근 시 홈으로 리디렉션 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

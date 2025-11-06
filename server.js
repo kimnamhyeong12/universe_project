@@ -9,6 +9,8 @@ const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const crypto = require("crypto");
+const purchaseRoutes = require("./routes/purchaseRoutes");
+const pixelRoutes = require("./routes/pixelRoutes");
 
 // ======== 환경 변수 로드 ========
 dotenv.config();
@@ -55,7 +57,7 @@ function signData(hash) {
 }
 
 // ======== 라우트 불러오기 ========
-const authRoutes = require("./routes/auth");
+const { router: authRoutes } = require("./routes/auth");
 const planetRoutes = require("./routes/planet");
 const universeRoutes = require("./routes/universe");
 const galaxyRoutes = require("./routes/galaxy");
@@ -73,6 +75,8 @@ app.use("/api/stars", starRoutes);
 app.use("/api/blackholes", blackholeRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/market", marketRoutes); // ✅ 마켓 라우트 연결
+app.use("/api/purchase", purchaseRoutes);
+app.use("/api/pixels", pixelRoutes);
 
 // ======== 인증서 및 정적 파일 공개 ========
 app.use("/certs", express.static(path.join(__dirname, "certs")));
