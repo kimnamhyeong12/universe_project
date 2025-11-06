@@ -9,9 +9,6 @@ const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const crypto = require("crypto");
-const payment = require("./routes/payment");
-const market = require("./routes/market");
-
 
 // ======== 환경 변수 로드 ========
 dotenv.config();
@@ -58,13 +55,17 @@ function signData(hash) {
 }
 
 // ======== 라우트 불러오기 ========
-const authRoutes = require("./routes/auth");
+const { router: authRoutes } = require("./routes/auth");
 const planetRoutes = require("./routes/planet");
 const universeRoutes = require("./routes/universe");
 const galaxyRoutes = require("./routes/galaxy");
 const starRoutes = require("./routes/star");
 const blackholeRoutes = require("./routes/blackhole");
 const certificateRoutes = require("./routes/certificate");
+const marketRoutes = require("./routes/market"); // ✅ 마켓 라우트 추가
+const purchaseRoutes = require("./routes/purchaseRoutes");
+const pixelRoutes = require("./routes/pixelRoutes");
+const paymentsRouter = require("./payments/payments.router"); // ✅ 토스 결제 라우터
 
 // ======== 라우트 연결 ========
 app.use("/api/auth", authRoutes);
@@ -74,9 +75,10 @@ app.use("/api/galaxies", galaxyRoutes);
 app.use("/api/stars", starRoutes);
 app.use("/api/blackholes", blackholeRoutes);
 app.use("/api/certificates", certificateRoutes);
-app.use("/api/payments", payment);
-app.use("/api/market", market);
-
+app.use("/api/market", marketRoutes); // ✅ 마켓 라우트 연결
+app.use("/api/purchase", purchaseRoutes);
+app.use("/api/pixels", pixelRoutes);
+app.use("/payments", paymentsRouter); // ✅ 토스 결제 라우터 통합 연결
 
 // ======== 인증서 및 정적 파일 공개 ========
 app.use("/certs", express.static(path.join(__dirname, "certs")));

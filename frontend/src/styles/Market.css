@@ -107,3 +107,25 @@
   background-color: rgba(143, 209, 255, 0.15);
   color: #ffffff;
 }
+
+.payment-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.payment-modal {
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 30px 40px;
+  color: white;
+  box-shadow: 0 0 30px rgba(100, 200, 255, 0.2);
+  text-align: center;
+  max-width: 420px;
+}

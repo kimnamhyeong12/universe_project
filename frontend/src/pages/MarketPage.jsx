@@ -1,16 +1,36 @@
-// src/pages/MarketPage.jsx
+// ✅ src/pages/MarketPage.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";  // 🔑 전역 인증
-import "../styles/Market.css";                      // 🎨 마켓 스타일
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import "../styles/Market.css";
+import PurchasePanel from "../components/PurchasePanel";
+import Modal from "../components/Modal"; // ✅ 기존 Modal 재활용
 
 export default function MarketPage() {
   const nav = useNavigate();
-  const { user } = useAuth();          // { token, username, ... }
+  const location = useLocation();
+  const { user } = useAuth();
+
+  // 자산 목록 및 상태
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
-  // 🔄 마켓 자산 로딩
+  // 구매 및 결제창 상태
+  const [showPurchase, setShowPurchase] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+
+  // ✅ 1. Universe에서 state로 전달된 자산 자동 인식
+  const { asset } = location.state || {};
+
+  useEffect(() => {
+    if (asset) {
+      setSelectedAsset(asset);
+      setShowPurchase(true);
+    }
+  }, [asset]);
+
+  // ✅ 2. 마켓 자산 불러오기
   useEffect(() => {
     async function fetchMarket() {
       try {
@@ -33,41 +53,38 @@ export default function MarketPage() {
     fetchMarket();
   }, []);
 
-  // 💰 자산 구매 요청
-  const handleBuy = async (type, id, name) => {
+  // ✅ 3. 구매 버튼 클릭 (Market 내부용)
+  const handleBuy = (type, id, name, price, imageUrl) => {
     if (!user || !user.token) {
       alert("로그인이 필요합니다.");
       return;
     }
-    try {
-      const res = await fetch("http://localhost:5000/api/market/buy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({ assetType: type, assetId: id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "구매 요청 실패");
-      alert(`✅ ${name} 구매 요청이 성공적으로 접수되었습니다.`);
-    } catch (err) {
-      console.error(err);
-      alert("❌ 구매 요청 실패");
-    }
+
+    setSelectedAsset({
+      _id: id,
+      name,
+      type,
+      price: price || 1000,
+      imageUrl,
+    });
+    setShowPurchase(true);
   };
 
   return (
     <div className="market-page">
       <h1>🌌 Universe Market</h1>
 
-      {/* 🔙 네비게이션 버튼들 */}
+      {/* 🔙 상단 버튼 */}
       <div className="mt-8 flex gap-12">
-        <button className="btn-outline" onClick={() => nav(-1)}>뒤로가기</button>
-        <button className="btn-glow" onClick={() => nav("/universe")}>우주 들어가기</button>
+        <button className="btn-outline" onClick={() => nav(-1)}>
+          뒤로가기
+        </button>
+        <button className="btn-glow" onClick={() => nav("/universe")}>
+          우주 들어가기
+        </button>
       </div>
 
-      {/* ⏳ 로딩 / ❌ 자산 없음 / ✅ 자산 목록 */}
+      {/* 🪐 자산 리스트 */}
       {loading ? (
         <p className="loading">Loading market assets...</p>
       ) : assets.length === 0 ? (
@@ -91,7 +108,15 @@ export default function MarketPage() {
                 )}
                 <button
                   className="buy-btn"
-                  onClick={() => handleBuy(asset.type, asset._id, asset.name)}
+                  onClick={() =>
+                    handleBuy(
+                      asset.type,
+                      asset._id,
+                      asset.name,
+                      asset.price,
+                      asset.imageUrl
+                    )
+                  }
                 >
                   구매하기
                 </button>
@@ -100,6 +125,69 @@ export default function MarketPage() {
           ))}
         </div>
       )}
+
+      {/* ✅ 4. 구매 패널 */}
+      {showPurchase && selectedAsset && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50">
+          <PurchasePanel
+            key={selectedAsset.name}
+            data={selectedAsset}
+            onBack={() => setShowPurchase(false)}
+            onBuy={(payload) => {
+              setSelectedAsset(payload);
+              setShowPurchase(false);
+              setShowPayment(true);
+            }}
+          />
+        </div>
+      )}
+
+      {/* ✅ 5. 결제 모달 (기존 Modal 활용) */}
+      {showPayment && (
+        <Modal
+          title="💳 결제창구"
+          isOpen={showPayment}
+          onClose={() => setShowPayment(false)}
+        >
+          <p>자산명: {selectedAsset?.name}</p>
+          <p>선택한 셀 개수: {selectedAsset?.selectedCells?.length}</p>
+          <p>
+            총 결제 금액:{" "}
+            <span className="text-cyan-300 font-bold">
+              {(selectedAsset?.selectedCells?.length || 1) *
+                (selectedAsset?.price || 1000)}{" "}
+              KRW
+            </span>
+          </p>
+
+          <div className="flex flex-col gap-3 mt-5">
+            <button
+              className="btn-neo btn-neo--lg"
+              onClick={() => {
+                // 💳 Toss 결제 위젯 페이지로 이동
+                const totalAmount =
+                  (selectedAsset?.selectedCells?.length || 1) *
+                  (selectedAsset?.price || 1000);
+
+                // 쿼리스트링으로 금액, 이름 전달
+                window.location.href = `/sandbox?orderName=${encodeURIComponent(
+                  selectedAsset?.name
+                )}&amount=${totalAmount}`;
+              }}
+            >
+              Toss 결제창 열기
+            </button>
+
+            <button
+              className="btn-neo btn-neo--lg"
+              onClick={() => setShowPayment(false)}
+            >
+              닫기
+            </button>
+          </div>
+        </Modal>
+      )}
+
     </div>
   );
 }

@@ -1,13 +1,30 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-// 'src/index.css'를 import하는 라인을 "삭제"합니다.
-// (Tailwind는 이제 index.html의 CDN 스크립트가 관리합니다.)
-// import './index.css' 
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import App from "./App.jsx";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// ✅ Toss 결제 관련 페이지 import
+import { CheckoutPage } from "./pages/Checkout.jsx";
+import { SuccessPage } from "./pages/Success.jsx";
+import { FailPage } from "./pages/Fail.jsx";
+
+
+// ✅ Toss 전용 CSS
+import "./styles/style.css"; // Toss style.css는 styles 폴더에 넣을 거야
+
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+    <Router>
+      <Routes>
+        {/* 기본 앱 라우트 */}
+        <Route path="/*" element={<App />} />
+
+        {/* ✅ Toss 결제 관련 라우트 */}
+        <Route path="/sandbox" element={<CheckoutPage />} />
+        <Route path="/sandbox/success" element={<SuccessPage />} />
+        <Route path="/sandbox/fail" element={<FailPage />} />
+      </Routes>
+    </Router>
+  </React.StrictMode>
+);
 
