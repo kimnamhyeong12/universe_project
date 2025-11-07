@@ -23,7 +23,10 @@ export default function MyPage() {
     태양: "/textures/sun.jpg",
   };
 
+<<<<<<< HEAD
   // ✅ 구매 내역 불러오기
+=======
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   useEffect(() => {
     if (!user || !user.id) return;
 
@@ -31,7 +34,14 @@ export default function MyPage() {
       try {
         const token =
           localStorage.getItem("celestia_token") || localStorage.getItem("jwt");
+<<<<<<< HEAD
         if (!token) return;
+=======
+        if (!token) {
+          console.warn("❌ 토큰이 없습니다.");
+          return;
+        }
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
         const res = await fetch(
           `http://localhost:5000/api/purchase/user/${user.id}`,
@@ -45,7 +55,10 @@ export default function MyPage() {
 
         if (!res.ok) throw new Error("구매 내역 불러오기 실패");
         const data = await res.json();
+<<<<<<< HEAD
         console.log("📦 구매 데이터:", data);
+=======
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
         setPurchases(data);
       } catch (err) {
         console.error("❌ 구매 내역 불러오기 오류:", err);
@@ -55,7 +68,10 @@ export default function MyPage() {
     fetchPurchases();
   }, [user]);
 
+<<<<<<< HEAD
   // ✅ 행성별 구역 묶기
+=======
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   const grouped = purchases.reduce((acc, p) => {
     if (!acc[p.planetName]) acc[p.planetName] = [];
     acc[p.planetName].push(p);
@@ -63,9 +79,14 @@ export default function MyPage() {
   }, {});
 
   const gridSizeX = 10;
+<<<<<<< HEAD
   const gridSizeY = 10; // ✅ PixelEditor 기준 통일
 
   // ✅ 구역 모달
+=======
+  const gridSizeY = 5;
+
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   const renderPlanetModal = (planetName) => {
     const cells = grouped[planetName] || [];
     const imgSrc = planetImages[planetName] || "/textures/planet_default.jpg";
@@ -78,20 +99,29 @@ export default function MyPage() {
             {cells.map((cell) => {
               const [x, y] = cell.cellId.split("-").map(Number);
               const bgSize = `${gridSizeX * 100}% ${gridSizeY * 100}%`;
+<<<<<<< HEAD
               const bgPosX = (x / (gridSizeX - 1)) * 100;
               const bgPosY = ((gridSizeY - 1 - y) / (gridSizeY - 1)) * 100;
+=======
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
               return (
                 <Link
                   key={cell._id}
+<<<<<<< HEAD
                   to={`/pixel/edit/${cell.editToken}`}
                   className="rounded-lg overflow-hidden border border-cyan-400/40 hover:scale-105 transition relative"
                   style={{ overflow: "hidden" }}
+=======
+                  to={`/pixel/${planetName}/${cell.cellId}`}
+                  className="rounded-lg overflow-hidden border border-cyan-400/40 hover:scale-105 transition relative"
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
                 >
                   <div
                     className="w-full h-24 bg-cover bg-center"
                     style={{
                       backgroundImage: `url(${imgSrc})`,
+<<<<<<< HEAD
                       backgroundSize: `${gridSizeX * 100}% ${gridSizeY * 100}%`,
                       backgroundPosition: `${(x / (gridSizeX - 1)) * 100}% ${(y / (gridSizeY - 1)) * 100}%`,
                       backgroundRepeat: "no-repeat",
@@ -99,6 +129,13 @@ export default function MyPage() {
                       }}
                     />
 
+=======
+                      backgroundSize: bgSize,
+                      backgroundPosition: `${(x / (gridSizeX - 1)) * 100}% ${(y / (gridSizeY - 1)) * 100}%`,
+                      filter: "brightness(1.4) contrast(1.1)",
+                    }}
+                  />
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
                   <div className="absolute bottom-1 right-2 text-xs text-cyan-300 font-bold drop-shadow">
                     {cell.cellId}
                   </div>
@@ -117,6 +154,7 @@ export default function MyPage() {
     );
   };
 
+<<<<<<< HEAD
   // ✅ 프로필 수정 모달
   const ProfileEditModal = ({ user, onClose }) => {
     const [username, setUsername] = useState(user.username || "");
@@ -233,6 +271,129 @@ export default function MyPage() {
       </div>
     );
   };
+=======
+   const ProfileEditModal = ({ user, onClose }) => {
+  const [username, setUsername] = useState(user.username || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleSave = async () => {
+  try {
+    const token =
+      localStorage.getItem("celestia_token") || localStorage.getItem("jwt");
+
+    if (!token) {
+      setError("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
+      return;
+    }
+
+    const body = { username, password: currentPassword };
+    if (newPassword) body.newPassword = newPassword;
+
+    const res = await fetch(`http://localhost:5000/api/auth/users/${user.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    // ✅ 실패 시 서버에서 받은 메시지를 그대로 표시
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const errMsg =
+        errData.message ||
+        errData.error ||
+        "업데이트 중 알 수 없는 오류가 발생했습니다.";
+      throw new Error(errMsg);
+    }
+
+    setSuccess("✅ 프로필이 성공적으로 수정되었습니다.");
+    setError(null);
+    setCurrentPassword("");
+    setNewPassword("");
+  } catch (err) {
+    console.error("프로필 수정 오류:", err);
+    setError(err.message); // ✅ 서버 메시지를 그대로 표시
+    setSuccess(null);
+  }
+};
+
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="rounded-xl bg-[#0b1622] border border-cyan-400/30 shadow-[0_0_20px_rgba(0,255,255,0.2)] w-[420px] p-8">
+        <div className="text-2xl font-bold text-white mb-6 border-b border-cyan-400/30 pb-2">
+          프로필 수정
+        </div>
+
+        <div className="space-y-4">
+          {/* 새 사용자 이름 */}
+          <div>
+            <label className="text-sm text-white/70">새 사용자 이름</label>
+            <input
+              type="text"
+              className="w-full mt-1 px-3 py-2 rounded-md bg-[#1b2431] text-white placeholder-gray-400 border border-cyan-400/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition"
+              placeholder="새 사용자 이름을 입력하세요"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+
+          {/* 기존 비밀번호 */}
+          <div>
+            <label className="text-sm text-white/70">기존 비밀번호</label>
+            <input
+              type="password"
+              className="w-full mt-1 px-3 py-2 rounded-md bg-[#1b2431] text-white placeholder-gray-400 border border-cyan-400/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition"
+              placeholder="현재 비밀번호를 입력하세요"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </div>
+
+          {/* 새 비밀번호 */}
+          <div>
+            <label className="text-sm text-white/70">새 비밀번호</label>
+            <input
+              type="password"
+              className="w-full mt-1 px-3 py-2 rounded-md bg-[#1b2431] text-white placeholder-gray-400 border border-cyan-400/30 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition"
+              placeholder="변경 시에만 입력하세요"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+
+          {/* 결과 메시지 */}
+          {success && <div className="text-green-400 text-sm">{success}</div>}
+          {error && <div className="text-red-400 text-sm">{error}</div>}
+
+          {/* 버튼 */}
+          <div className="flex justify-between gap-3 pt-4">
+            <button
+              onClick={handleSave}
+              className="w-full py-2 rounded-md bg-cyan-500 hover:bg-cyan-400 text-black font-semibold transition"
+            >
+              저장
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold transition"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
   return (
     <div className="min-h-screen pb-24 bg-[radial-gradient(1200px_800px_at_20%_-10%,rgba(24,231,255,.06),transparent_55%),radial-gradient(1200px_800px_at_80%_-10%,rgba(139,92,246,.05),transparent_55%),#030b15]">
@@ -301,10 +462,14 @@ export default function MyPage() {
         <div className="card-glass p-6">
           <div className="text-xl font-bold">설정</div>
           <div className="mt-4 space-y-3">
+<<<<<<< HEAD
             <button
               className="btn btn-outline w-full"
               onClick={() => setShowProfileModal(true)}
             >
+=======
+            <button className="btn btn-outline w-full" onClick={() => setShowProfileModal(true)}>
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
               프로필 수정
             </button>
             <button className="btn btn-outline w-full">알림 설정</button>
@@ -312,9 +477,13 @@ export default function MyPage() {
           </div>
           <div className="mt-6 hr-neon" />
           <div className="mt-6">
+<<<<<<< HEAD
             <Link to="/" className="btn btn-ghost w-full">
               홈으로
             </Link>
+=======
+            <Link to="/" className="btn btn-ghost w-full">홈으로</Link>
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
           </div>
         </div>
       </div>
@@ -322,10 +491,14 @@ export default function MyPage() {
       {/* 모달들 */}
       {showModal && renderPlanetModal(selectedPlanet)}
       {showProfileModal && (
+<<<<<<< HEAD
         <ProfileEditModal
           user={user}
           onClose={() => setShowProfileModal(false)}
         />
+=======
+        <ProfileEditModal user={user} onClose={() => setShowProfileModal(false)} />
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
       )}
     </div>
   );

@@ -54,7 +54,11 @@ export default function App() {
           <Route path="/mypage" element={<MyPage />} />
 
           {/* ✅ 픽셀 편집기 라우트 */}
+<<<<<<< HEAD
           <Route path="/pixel/edit/:token" element={<PixelEditor />} />
+=======
+          <Route path="/pixel/:planet/:cellId" element={<PixelEditor />} />
+>>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
           {/* ✅ 구경하기 라우트 추가 */}
           <Route path="/view/:planet" element={<ViewPlanet />} />
