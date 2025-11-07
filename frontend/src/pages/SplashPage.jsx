@@ -42,7 +42,7 @@ export default function SplashPage({ onEnter }) {
   useEffect(() => {
     const els = document.querySelectorAll(".reveal");
     const io = new IntersectionObserver(
-      (entries) => entries.forEach((en) => en.isIntersecting && en.target.classList.add("reveal--show")),
+      (entries) => entries.forEach((en) => en.target.classList.toggle("reveal--show", en.isIntersecting)),
       { threshold: 0.2 }
     );
     els.forEach((el) => io.observe(el));
