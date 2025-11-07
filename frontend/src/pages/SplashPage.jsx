@@ -131,33 +131,7 @@ export default function SplashPage({ onEnter }) {
         </div>
       </section>
 
-      {/* PROGRAMS (구매창) */}
-      <section ref={refs.programs} data-id="programs" className="section">
-        <div className="section__bg" style={{ backgroundImage: "url(/assets/sections/programs.jpg)" }} />
-        <div className="section__inner">
-          <h2 className="section__title reveal">프로그램</h2>
-          <div className="grid grid-3 mt-24">
-            {[
-              ["Starter", "₩9,900", ["구역 10×10", "기본 뱃지"]],
-              ["Creator", "₩29,900", ["구역 20×20", "프로 뱃지", "확장 팔레트"]],
-              ["Legend", "₩79,900", ["구역 40×40", "레전드 뱃지", "특수 이펙트"]],
-            ].map(([name, price, feat], i) => (
-              <div key={name} className={`card-glass p-20 reveal delay-${i}`}>
-                <div className="plan__name">{name}</div>
-                <div className="plan__price">{price}</div>
-                <ul className="card__list mt-12">
-                  {feat.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
-                <button className="btn-glow mt-20" onClick={() => gotoMarket(name)}>
-                  구매하기
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+     
 
       {/* GALLERY */}
       <section ref={refs.gallery} data-id="gallery" className="section dark">

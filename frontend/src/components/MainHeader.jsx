@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "../styles/landing.css";
 
 export default function MainHeader({ onModalOpen, anchors }) {
   const { user, logout } = useAuth();
@@ -31,7 +32,6 @@ export default function MainHeader({ onModalOpen, anchors }) {
               <button onClick={() => go("gallery")} className="px-3 py-2 text-white/80 hover:text-white">갤러리</button>
               <button onClick={() => go("team")}    className="px-3 py-2 text-white/80 hover:text-white">팀 소개</button>
               <span className="mx-3 h-5 w-px bg-white/15" />
-              <button onClick={() => go("shop")}    className="px-3 py-2 text-white/80 hover:text-white">구매창</button>
               <Link to="/mypage" className="px-3 py-2 text-white/80 hover:text-white">마이페이지</Link>
             </nav>
 
