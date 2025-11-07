@@ -96,3 +96,14 @@
 .panel-narrow .btn-neo { margin-top: 10px; }
 
 html { scroll-behavior: smooth; }
+
+
+.panel-planet-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10; /* 썸네일과 동일한 비율 */
+  border-radius: 14px; /* .cel-hud와 동일한 둥글기 */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  object-fit: cover; /* 이미지가 비율에 맞게 꽉 차도록 */
+}

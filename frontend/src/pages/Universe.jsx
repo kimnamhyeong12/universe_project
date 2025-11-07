@@ -9,10 +9,11 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 import "../styles/celestia-styles.css";
 import PurchasePanel from "../components/PurchasePanel";
-import { useNavigate } from "react-router-dom"; // ✅ 추가
+import { useNavigate } from "react-router-dom";
 
 /* ----------------------------- HUD ----------------------------- */
 function HUD({ username }) {
+  // ... (이하 동일)
   return (
     <div className="absolute top-4 left-4 z-30">
       <div className="cel-hud card-glass px-5 py-4">
@@ -34,6 +35,7 @@ function HUD({ username }) {
 
 /* ----------------------------- Orbit Line ----------------------------- */
 function OrbitLine({ radius }) {
+  // ... (이하 동일)
   const pts = [];
   const seg = 128;
   for (let i = 0; i <= seg; i++) {
@@ -50,6 +52,7 @@ function OrbitLine({ radius }) {
 
 /* ----------------------------- Saturn Rings ----------------------------- */
 function SaturnRings() {
+  // ... (이하 동일)
   const texture = useTexture("/textures/saturn_ring.png");
   return (
     <Plane args={[8, 8]} rotation={[Math.PI / 2.5, 0, 0]}>
@@ -60,6 +63,7 @@ function SaturnRings() {
 
 /* ----------------------------- Planet (공전 정지 + 자전 유지) ----------------------------- */
 function Planet({ data, onSelect, freezeOrbit = false }) {
+  // ... (이하 동일)
   const ORBIT_MULT = 2.5;
   const SPIN_MULT = 1.4;
 
@@ -118,6 +122,7 @@ function Planet({ data, onSelect, freezeOrbit = false }) {
 
 /* ----------------------------- Star ----------------------------- */
 function Star({ data, position = [0, 0, 0], onSelect }) {
+  // ... (이하 동일)
   const texture = useTexture(data.imageUrl || "/textures/sun.jpg");
   return (
     <group
@@ -152,9 +157,11 @@ function Star({ data, position = [0, 0, 0], onSelect }) {
 
 /* ----------------------------- Small UI ----------------------------- */
 function Thumb({ url }) {
+  // ... (이하 동일)
   return <div className="thumb" style={{ backgroundImage: `url(${url})` }} />;
 }
 function InfoBox({ label, value }) {
+  // ... (이하 동일)
   return (
     <div className="bg-white/5 rounded-md px-4 py-3 border border-white/10 flex items-center justify-between">
       <span className="text-cyan-200/80 text-sm md:text-base">{label}</span>
@@ -165,14 +172,10 @@ function InfoBox({ label, value }) {
   );
 }
 
-/* ----------------------------- ObjectPanel ----------------------------- */
+/* ----------------------------- ObjectPanel (✅ 수정됨) ----------------------------- */
 function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
   const isStar = data.type === "star";
   const navigate = useNavigate();
-
-  const posText = data.worldPos
-    ? `${data.worldPos.x.toFixed(1)}, ${data.worldPos.y.toFixed(1)}, ${data.worldPos.z.toFixed(1)}`
-    : "-";
 
   // ✅ 수정된 구매 이동 함수
   const handlePurchase = () => {
@@ -205,15 +208,16 @@ function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
           </div>
         </div>
 
-        {/* 인포 */}
-        <div className="mt-4 grid grid-cols-1 gap-3 text-cyan-100/90">
-          <InfoBox label="크기" value={isStar ? "대" : "중"} />
-          <InfoBox label="등급" value={isStar ? "G형" : "—"} />
-          <InfoBox label="좌표" value={posText} />
-          <InfoBox label="상태" value={<span className="text-emerald-300">정상</span>} />
+        {/* ✅ [수정] 인포 박스 4줄 대신 이미지 추가 */}
+        <div className="mt-4">
+          <img
+            src={data.imageUrl || "/textures/planet_default.jpg"}
+            alt={data.name}
+            className="panel-planet-image" 
+          />
         </div>
 
-        {/* 액션 */}
+        {/* 액션 (유지) */}
         <div className="mt-5 flex flex-col gap-3">
           <button className="btn-neo btn-neo--lg" onClick={onOpenDetail}>
             정보 보기
@@ -242,7 +246,7 @@ function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
 }
 
 
-/* ----------------------------- DetailSlide ----------------------------- */
+/* ----------------------------- DetailSlide (✅ 수정됨) ----------------------------- */
 function DetailSlide({ open, data, onClose }) {
   const [tab, setTab] = useState("info");
   const posText = data?.worldPos
@@ -266,12 +270,14 @@ function DetailSlide({ open, data, onClose }) {
           </button>
         </div>
 
+        {/* 탭 (유지) */}
         <div className="tabs mt-5">
           <button className={`tab ${tab === "info" ? "active" : ""}`} onClick={() => setTab("info")}>정보</button>
           <button className={`tab ${tab === "images" ? "active" : ""}`} onClick={() => setTab("images")}>이미지</button>
           <button className={`tab ${tab === "inner" ? "active" : ""}`} onClick={() => setTab("inner")}>내부구조</button>
         </div>
 
+        {/* 탭 콘텐츠 (유지) */}
         <div className="mt-5 min-h-[340px]">
           {tab === "info" && (
             <div className="space-y-4 text-cyan-100/90">
@@ -300,11 +306,9 @@ function DetailSlide({ open, data, onClose }) {
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <button className="btn-neo btn-neo--lg" onClick={() => alert("🔍 더 알아보기")}>자세히</button>
-          <button className="btn-neo btn-neo--lg" onClick={() => alert("💰 구매하기")}>구매</button>
-          <button className="btn-neo btn-neo--lg" onClick={() => alert("👀 구경하기")}>구경</button>
-        </div>
+        {/* ✅ [수정] 하단 버튼 3개 (자세히, 구매, 구경) 삭제됨 */}
+        {/* <div className="mt-5 grid grid-cols-3 gap-3"> ... </div> */}
+
       </div>
     </div>
   );
@@ -312,6 +316,7 @@ function DetailSlide({ open, data, onClose }) {
 
 /* ----------------------------- Camera Controller ----------------------------- */
 function CameraController({ target, track = true, onArrived }) {
+  // ... (이하 동일)
   const controlsRef = useRef();
   const { camera } = useThree();
 
@@ -387,7 +392,7 @@ function CameraController({ target, track = true, onArrived }) {
   return <CameraControls ref={controlsRef} />;
 }
 
-/* ----------------------------- Main ----------------------------- */
+/* ----------------------------- Main (✅ 수정됨) ----------------------------- */
 export default function Universe() {
   const auth = useAuth();
   const [stars, setStars] = useState([]);
@@ -399,6 +404,7 @@ export default function Universe() {
   const [showPurchase, setShowPurchase] = useState(false);
 
   useEffect(() => {
+    // ... (이하 동일)
     const fetchAll = async () => {
       try {
         setIsLoading(true);
@@ -427,24 +433,26 @@ export default function Universe() {
 
           {!isLoading && !error && (
             <>
+              {/* ✅ [수정] onSelect에서 setOpenDetail(true) 제거 */}
               {stars.map(d => (
-                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={(item) => { setSelected(item); setOpenDetail(true); }} />
+                <Star key={d._id} data={d} position={[0, 0, 0]} onSelect={(item) => setSelected(item)} />
               ))}
+              {/* ✅ [수정] onSelect에서 setOpenDetail(true) 제거 */}
               {planets.map(d => (
                 <Planet
                   key={d._id}
                   data={d}
-                  onSelect={(item) => { setSelected(item); setOpenDetail(true); }}
+                  onSelect={(item) => setSelected(item)}
                   freezeOrbit={openDetail && selected?._id === d._id}
                 />
               ))}
             </>
           )}
 
+          {/* ✅ [수정] onArrived 프롭 제거 */}
           <CameraController
             target={selected}
             track={!(selected?.type === "planet" && openDetail)}
-            onArrived={() => setOpenDetail(true)}
           />
         </Suspense>
 
@@ -453,6 +461,7 @@ export default function Universe() {
         </EffectComposer>
       </Canvas>
 
+      {/* ✅ [수정] 로직은 그대로 두지만, onOpenDetail이 '정보 보기' 버튼을 통해 호출됨 */}
       {auth.user && <HUD username={auth.user.username} />}
 
       {selected && !showPurchase && (
@@ -471,6 +480,7 @@ export default function Universe() {
         />
       )}
       
+      {/* ✅ [수정] openDetail은 '정보 보기' 버튼을 통해서만 true가 됨 */}
       <DetailSlide open={openDetail} data={selected} onClose={() => setOpenDetail(false)} />
 
       {error && (
