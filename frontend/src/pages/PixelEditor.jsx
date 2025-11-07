@@ -1,26 +1,15 @@
-<<<<<<< HEAD
 import React, { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { HexColorPicker, HexColorInput } from "react-colorful"; // 🎨 항상 열린 파레트용
-=======
-// src/pages/PixelEditor.jsx
-import React, { useRef, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 import "../styles/celestia-styles.css";
 
 const GRID_W = 10;
 const GRID_H = 10;
 const CELL_PIXEL_W = 50;
 const CELL_PIXEL_H = 50;
-<<<<<<< HEAD
 const PIXEL_SIZE = 8;
 const SCALE = 1.6;
-=======
-const PIXEL_SIZE = 8; // 확대 비율
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
 const planetImages = {
   수성: "/textures/mercury.jpg",
@@ -35,7 +24,6 @@ const planetImages = {
 };
 
 export default function PixelEditor() {
-<<<<<<< HEAD
   const { token } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -53,32 +41,10 @@ export default function PixelEditor() {
   // ✅ UUID 토큰으로 셀 정보 및 픽셀 불러오기
   useEffect(() => {
     const jwt =
-=======
-  const { planet, cellId } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const canvasRef = useRef(null);
-  const [color, setColor] = useState("#00ffff");
-  const [pixels, setPixels] = useState([]);
-  const [baseImg, setBaseImg] = useState(null);
-
-  // ✅ 행성 텍스처 로드
-  useEffect(() => {
-    const img = new Image();
-    img.src = planetImages[planet] || "/textures/planet_default.jpg";
-    img.onload = () => setBaseImg(img);
-  }, [planet]);
-
-  // ✅ 내 픽셀 불러오기
-  useEffect(() => {
-    const token =
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
       localStorage.getItem("jwt") ||
       localStorage.getItem("celestia_token") ||
       localStorage.getItem("token");
 
-<<<<<<< HEAD
     if (!jwt) {
       alert("로그인이 필요합니다.");
       navigate("/login");
@@ -118,43 +84,16 @@ export default function PixelEditor() {
   // ✅ 캔버스 렌더링 (행성 셀 비율 반영)
   useEffect(() => {
     if (!canvasRef.current || !baseImg || !planet || !cellId) return;
-=======
-    if (!token) return;
-
-    (async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/pixels/mine/${planet}/${cellId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = await res.json();
-        setPixels(Array.isArray(data?.pixels) ? data.pixels : []);
-      } catch (err) {
-        console.error("❌ 내 픽셀 불러오기 실패:", err);
-      }
-    })();
-  }, [planet, cellId]);
-
-  // ✅ 캔버스 렌더링
-  useEffect(() => {
-    if (!canvasRef.current || !baseImg) return;
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     const ctx = canvasRef.current.getContext("2d");
 
     const [cx, cy] = cellId.split("-").map(Number);
     const texW = baseImg.naturalWidth;
     const texH = baseImg.naturalHeight;
-<<<<<<< HEAD
-=======
-
-    // 10x10 격자 기준 크롭
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     const srcW = texW / GRID_W;
     const srcH = texH / GRID_H;
     const sx = cx * srcW;
     const sy = cy * srcH;
 
-<<<<<<< HEAD
     const aspect = srcW / srcH;
     const baseSize = CELL_PIXEL_W * PIXEL_SIZE * SCALE;
     let targetH = baseSize;
@@ -187,25 +126,6 @@ export default function PixelEditor() {
       ctx.fillRect(
         x * (targetW / CELL_PIXEL_W),
         y * (targetH / CELL_PIXEL_H),
-=======
-    // 16:9 비율 계산 (하나의 셀 비율 유지)
-    const aspect = srcW / srcH;
-    const targetW = CELL_PIXEL_W * PIXEL_SIZE;
-    const targetH = targetW / aspect;
-
-    canvasRef.current.width = targetW;
-    canvasRef.current.height = targetH;
-
-    // 배경
-    ctx.drawImage(baseImg, sx, sy, srcW, srcH, 0, 0, targetW, targetH);
-
-    // 픽셀 그리기
-    pixels.forEach(({ x, y, color }) => {
-      ctx.fillStyle = color;
-      ctx.fillRect(
-        (x * targetW) / CELL_PIXEL_W,
-        (y * targetH) / CELL_PIXEL_H,
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
         targetW / CELL_PIXEL_W,
         targetH / CELL_PIXEL_H
       );
@@ -227,7 +147,6 @@ export default function PixelEditor() {
       ctx.lineTo(targetW, y);
       ctx.stroke();
     }
-<<<<<<< HEAD
   }, [baseImg, pixels, cellId, planet, canvasSize]);
 
   // ✅ 픽셀 찍기 / 지우기
@@ -238,20 +157,10 @@ export default function PixelEditor() {
 
     const x = Math.floor((relX / rect.width) * CELL_PIXEL_W);
     const y = Math.floor((relY / rect.height) * CELL_PIXEL_H);
-=======
-  }, [baseImg, pixels, cellId]);
-
-  // ✅ 그리기
-  const drawAt = (clientX, clientY) => {
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.floor(((clientX - rect.left) / rect.width) * CELL_PIXEL_W);
-    const y = Math.floor(((clientY - rect.top) / rect.height) * CELL_PIXEL_H);
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     if (x < 0 || y < 0 || x >= CELL_PIXEL_W || y >= CELL_PIXEL_H) return;
 
     setPixels((prev) => {
       const idx = prev.findIndex((p) => p.x === x && p.y === y);
-<<<<<<< HEAD
       if (eraseMode) {
         if (idx >= 0) {
           const next = [...prev];
@@ -271,24 +180,11 @@ export default function PixelEditor() {
   };
 
   // ✅ 전체 초기화
-=======
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = { x, y, color };
-        return next;
-      }
-      return [...prev, { x, y, color }];
-    });
-  };
-
-  // ✅ 초기화
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   const handleClear = () => {
     if (!window.confirm("정말 모든 픽셀을 초기화할까요?")) return;
     setPixels([]);
   };
 
-<<<<<<< HEAD
   // ✅ 저장 (UUID 기반)
   const handleSave = async () => {
     const jwt =
@@ -307,25 +203,6 @@ export default function PixelEditor() {
         body: JSON.stringify({ token, pixels }),
       });
 
-=======
-  // ✅ 저장
-  const handleSave = async () => {
-    const token =
-      localStorage.getItem("jwt") ||
-      localStorage.getItem("celestia_token") ||
-      localStorage.getItem("token");
-    if (!token) return alert("로그인이 필요합니다.");
-
-    try {
-      const res = await fetch("http://localhost:5000/api/pixels/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ planetName: planet, cellId, pixels }),
-      });
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
       const result = await res.json();
       if (!res.ok) throw new Error(result?.message);
       alert("✅ 픽셀 저장 완료!");
@@ -335,7 +212,6 @@ export default function PixelEditor() {
     }
   };
 
-<<<<<<< HEAD
   // ✅ 로딩 표시
   if (loading) {
     return (
@@ -406,35 +282,6 @@ export default function PixelEditor() {
             {eraseMode ? "지우개 ON" : "지우개 OFF"}
           </button>
         </div>
-=======
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-      <h2 className="text-xl font-bold">
-        {planet} — {cellId} 구역 편집
-      </h2>
-      <input
-        type="color"
-        value={color}
-        onChange={(e) => setColor(e.target.value)}
-        className="w-16 h-10"
-      />
-      <canvas
-        ref={canvasRef}
-        onMouseDown={(e) => drawAt(e.clientX, e.clientY)}
-        onMouseMove={(e) => e.buttons === 1 && drawAt(e.clientX, e.clientY)}
-        style={{ border: "1px solid cyan", cursor: "crosshair" }}
-      />
-      <div className="flex gap-3 mt-3">
-        <button className="btn btn-outline" onClick={handleSave}>
-          저장하기
-        </button>
-        <button className="btn btn-ghost" onClick={() => navigate("/mypage")}>
-          돌아가기
-        </button>
-        <button className="btn btn-error" onClick={handleClear}>
-          초기화
-        </button>
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
       </div>
     </div>
   );

@@ -16,10 +16,7 @@
     "@tosspayments/tosspayments-sdk": "^2.4.1",
     "konva": "^10.0.8",
     "react": "^19.1.1",
-<<<<<<< HEAD
     "react-colorful": "^5.6.1",
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     "react-dom": "^19.1.1",
     "react-konva": "^19.2.0",
     "react-router-dom": "^7.9.5",

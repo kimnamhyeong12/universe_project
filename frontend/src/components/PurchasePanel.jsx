@@ -20,16 +20,9 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
   };
 
   const imgSrc = planetImages[data?.name] || "/textures/planet_default.jpg";
-<<<<<<< HEAD
   const gridSize = 10; // ✅ ViewPlanet과 동일한 GRID_W, GRID_H
 
   // ✅ 행성의 기존 구매 내역 불러오기
-=======
-  const gridSize = 10;
-
-  // ✅ 행성의 기존 구매 내역 불러오기
-  // ✅ 행성의 기존 구매 내역 불러오기 + 결제 후 자동 갱신
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   useEffect(() => {
     const fetchPurchases = async () => {
       try {
@@ -42,28 +35,16 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
       }
     };
 
-<<<<<<< HEAD
-=======
-    // 🔹 로컬스토리지에 방금 결제한 행성 이름이 있으면 자동 새로고침
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     const lastPlanet = localStorage.getItem("lastPlanet");
     if (lastPlanet === data?.name) {
       localStorage.removeItem("lastPlanet");
       localStorage.removeItem("lastCells");
-<<<<<<< HEAD
-=======
-      // 결제 직후 재요청
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
       setTimeout(fetchPurchases, 1000);
     } else if (data?.name) {
       fetchPurchases();
     }
   }, [data]);
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   // ✅ 셀 생성
   const cells = [];
   for (let y = 0; y < gridSize; y++) {
@@ -83,7 +64,6 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
     );
   };
 
-<<<<<<< HEAD
   // ✅ 구매 확정
   const handlePurchase = () => {
     if (selectedCells.length === 0)
@@ -98,36 +78,13 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
   // ✅ 비율 맞춘 지도 크기 (2:1 비율 유지)
   const mapWidth = 720;
   const mapHeight = 360;
-=======
-  // ✅ 구매 확정 → 결제창으로 넘김
-  // ✅ 구매 확정 버튼
-  const handlePurchase = async () => {
-    if (selectedCells.length === 0)
-      return alert("먼저 구매할 영역을 선택하세요!");
-
-    // 👉 선택 정보 로컬스토리지 저장 (결제 후 Success.jsx에서 사용)
-    localStorage.setItem("lastPlanet", data.name);
-    localStorage.setItem("lastCells", JSON.stringify(selectedCells));
-
-    // 결제창으로 이동
-    onBuy({
-      ...data,
-      selectedCells,
-    });
-  };
-
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div
         className="card-glass text-cyan-100 rounded-2xl shadow-xl border border-cyan-500/30"
         style={{
-<<<<<<< HEAD
           width: "780px",
-=======
-          width: "700px",
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
           padding: "24px 32px",
           display: "flex",
           flexDirection: "column",
@@ -157,7 +114,6 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
           원하는 구역을 클릭하여 구매하세요. 각 구역은 독립적으로 소유할 수 있습니다.
         </p>
 
-<<<<<<< HEAD
         {/* 🌍 지도 */}
         <div
           className="relative border border-white/20 rounded-xl overflow-hidden mb-5"
@@ -167,16 +123,6 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
             backgroundImage: `url(${imgSrc})`,
             backgroundSize: "contain", // ✅ 비율 유지 (중요!)
             backgroundRepeat: "no-repeat",
-=======
-        {/* 🌍 이미지 + 격자 */}
-        <div
-          className="relative border border-white/20 rounded-xl overflow-hidden mb-5"
-          style={{
-            width: "640px",
-            height: "360px",
-            backgroundImage: `url(${imgSrc})`,
-            backgroundSize: "cover",
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
             backgroundPosition: "center",
             display: "grid",
             gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
@@ -192,19 +138,11 @@ export default function PurchasePanel({ data, onBack, onBuy }) {
                 key={cell.id}
                 onClick={() => handleCellClick(cell)}
                 style={{
-<<<<<<< HEAD
                   border: "0.5px solid rgba(255,255,255,0.08)",
                   backgroundColor: isPurchased
                     ? "rgba(180,180,180,0.45)"
                     : isSelected
                     ? "rgba(0,255,255,0.3)"
-=======
-                  border: "0.5px solid rgba(255,255,255,0.05)",
-                  backgroundColor: isPurchased
-                    ? "rgba(180,180,180,0.45)" // 구매된 영역은 밝은 회색
-                    : isSelected
-                    ? "rgba(0,255,255,0.3)" // 선택 영역은 청록색
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
                     : "transparent",
                   cursor: isPurchased ? "not-allowed" : "pointer",
                   transition: "background-color 0.2s",

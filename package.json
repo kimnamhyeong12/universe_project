@@ -23,17 +23,10 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-<<<<<<< HEAD
     "mongoose": "^8.19.3",
     "node-fetch": "^3.3.2",
     "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",
     "uuid": "^13.0.0"
-=======
-    "mongoose": "^8.19.2",
-    "node-fetch": "^3.3.2",
-    "pdfkit": "^0.17.2",
-    "qrcode": "^1.5.4"
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   }
 }

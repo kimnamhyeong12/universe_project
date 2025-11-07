@@ -1,21 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const verifyToken = require("../middleware/verifyToken");
-<<<<<<< HEAD
 const { v4: uuidv4 } = require("uuid");
 const Purchase = require("../models/Purchase"); // ✅ 모델 불러오기
-=======
-const mongoose = require("mongoose");
-
-// ✅ 구매 데이터 모델 정의 (models/Purchase.js에 분리해도 무방)
-const purchaseSchema = new mongoose.Schema({
-  planetName: { type: String, required: true },
-  cellId: { type: String, required: true },
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  createdAt: { type: Date, default: Date.now },
-});
-const Purchase = mongoose.model("Purchase", purchaseSchema);
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 
 // ✅ [POST] 구매 요청 — 이미 구매된 칸 중복 방지 포함
 router.post("/", verifyToken, async (req, res) => {
@@ -27,10 +14,7 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "잘못된 요청입니다." });
     }
 
-<<<<<<< HEAD
     // 이미 구매된 셀 확인
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     const existing = await Purchase.find({
       planetName,
       cellId: { $in: cells },
@@ -43,25 +27,18 @@ router.post("/", verifyToken, async (req, res) => {
       });
     }
 
-<<<<<<< HEAD
     // ✅ 새로운 구매 생성 (각 셀마다 UUID editToken 부여)
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     const purchases = await Promise.all(
       cells.map((cellId) =>
         Purchase.create({
           planetName,
           cellId,
           owner: userId,
-<<<<<<< HEAD
           editToken: uuidv4(), // 🔑 편집용 UUID 생성
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
         })
       )
     );
 
-<<<<<<< HEAD
     res.json({
       message: "✅ 구매 완료",
       data: purchases.map((p) => ({
@@ -70,9 +47,6 @@ router.post("/", verifyToken, async (req, res) => {
         editToken: p.editToken, // ✅ 프론트에서 바로 사용 가능
       })),
     });
-=======
-    res.json({ message: "✅ 구매 완료", data: purchases });
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   } catch (err) {
     console.error("❌ 구매 처리 오류:", err);
     res.status(500).json({ message: "서버 오류가 발생했습니다." });
@@ -116,17 +90,13 @@ router.post("/confirm", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "❌ 저장할 구매 정보가 없습니다." });
     }
 
-<<<<<<< HEAD
     // ✅ 결제 완료 시 editToken 생성
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     const records = await Promise.all(
       cells.map((cellId) =>
         Purchase.create({
           planetName,
           cellId,
           owner: userId,
-<<<<<<< HEAD
           orderId,
           paymentKey,
           amount,
@@ -134,8 +104,6 @@ router.post("/confirm", verifyToken, async (req, res) => {
           buyer,
           transactionDate: new Date(),
           editToken: uuidv4(), // 🔑 편집용 UUID 생성
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
         })
       )
     );
@@ -148,14 +116,10 @@ router.post("/confirm", verifyToken, async (req, res) => {
       paymentKey,
       amount,
       planet: planetName,
-<<<<<<< HEAD
       cells: records.map((r) => ({
         cellId: r.cellId,
         editToken: r.editToken, // ✅ 프론트에서 이걸로 /pixel/edit/:token 이동
       })),
-=======
-      cells: records.map((r) => r.cellId),
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
     });
   } catch (err) {
     console.error("❌ 결제 구매정보 저장 실패:", err);

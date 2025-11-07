@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 // src/pages/ViewPlanet.jsx
-=======
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import "../styles/celestia-styles.css";
@@ -11,10 +8,6 @@ const GRID_W = 10;
 const GRID_H = 10;
 const CELL_PIXEL_W = 50;
 const CELL_PIXEL_H = 50;
-<<<<<<< HEAD
-=======
-const PIXEL_SIZE = 4;
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
 // ======================================
 
 const planetImages = {
@@ -61,11 +54,7 @@ export default function ViewPlanet() {
     })();
   }, [planet]);
 
-<<<<<<< HEAD
   // ✅ 캔버스 렌더링 (GRID 기준 정확히 맞춤)
-=======
-  // ✅ 캔버스 렌더링
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -75,7 +64,6 @@ export default function ViewPlanet() {
     base.src = planetImages[planet] || "/textures/planet_default.jpg";
 
     base.onload = () => {
-<<<<<<< HEAD
       const texW = base.naturalWidth;
       const texH = base.naturalHeight;
 
@@ -108,44 +96,12 @@ export default function ViewPlanet() {
           const py = startY + p.y * scaleY;
           ctx.fillStyle = p.color;
           ctx.fillRect(px, py, scaleX, scaleY);
-=======
-      // 기본 비율 계산
-      const aspect = base.width / base.height;
-      const totalWidth = GRID_W * CELL_PIXEL_W;
-      const totalHeight = GRID_H * CELL_PIXEL_H;
-
-      // 내부 해상도 (픽셀 그릴 기준)
-      canvas.width = totalWidth;
-      canvas.height = totalHeight;
-
-      // 배경 행성 이미지
-      ctx.drawImage(base, 0, 0, canvas.width, canvas.height);
-
-      // 픽셀 데이터 렌더링
-      pixelData.forEach((cell) => {
-        const [cx, cy] = String(cell.cellId).split("-").map(Number);
-        const offsetX = cx * CELL_PIXEL_W;
-        const offsetY = cy * CELL_PIXEL_H;
-
-        (cell.pixels || []).forEach((p) => {
-          ctx.fillStyle = p.color;
-          ctx.fillRect(
-            offsetX + p.x,
-            offsetY + p.y,
-            1, // ✅ 실제 에디터 1픽셀 기준
-            1
-          );
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
         });
       });
     };
   }, [pixelData, planet]);
 
-<<<<<<< HEAD
   // ✅ 로딩 중
-=======
-  // ✅ 로딩 상태
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-cyan-200 text-2xl">
@@ -164,11 +120,7 @@ export default function ViewPlanet() {
         이 행성의 모든 유저가 남긴 픽셀 아트가 표시됩니다.
       </p>
 
-<<<<<<< HEAD
       {/* ✅ 뷰포트 */}
-=======
-      {/* ✅ 크기 제한된 뷰포트 */}
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
       <div
         className="border border-cyan-400/50 rounded-lg p-2 bg-black/40 shadow-xl flex justify-center items-center overflow-hidden"
         style={{
@@ -180,15 +132,9 @@ export default function ViewPlanet() {
           ref={canvasRef}
           style={{
             display: "block",
-<<<<<<< HEAD
             width: "100%",
             height: "100%",
             imageRendering: "pixelated",
-=======
-            width: "100%", // 화면에서 보기 좋게 스케일링
-            height: "100%",
-            imageRendering: "pixelated", // ✅ 픽셀 선명하게
->>>>>>> 77b18ee264602059b9c3af338aaaa08162b6331f
           }}
         />
       </div>
