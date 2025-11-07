@@ -58,7 +58,6 @@ export default function SiteHeader({ anchors = {} }) {
           {[
             ["about", "CELESTIA란?"],
             ["capability", "기술 역량"],
-            ["programs", "프로그램"],
             ["gallery", "갤러리"],
             ["contact", "문의"],
           ].map(([id, label]) => (
@@ -87,9 +86,6 @@ export default function SiteHeader({ anchors = {} }) {
             <>
               <button className="btn-outline" onClick={() => setOpenLogin(true)}>
                 로그인
-              </button>
-              <button className="btn-glow sm-hidden" onClick={() => goto("programs")}>
-                지금 시작
               </button>
             </>
           )}
