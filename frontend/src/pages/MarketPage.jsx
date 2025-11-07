@@ -74,14 +74,22 @@ export default function MarketPage() {
     <div className="market-page">
       <h1>🌌 Universe Market</h1>
 
-      {/* 🔙 상단 버튼 */}
-      <div className="mt-8 flex gap-12">
+      {/* 🔙 상단 버튼 (수정됨) */}
+      <div className="mt-8 flex justify-between items-center">
+        {/* 왼쪽 그룹 */}
         <button className="btn-outline" onClick={() => nav(-1)}>
           뒤로가기
         </button>
-        <button className="btn-glow" onClick={() => nav("/universe")}>
-          우주 들어가기
-        </button>
+
+        {/* 오른쪽 그룹 */}
+        <div className="flex gap-12">
+          <button className="btn-glow" onClick={() => nav("/universe")}>
+            우주 들어가기
+          </button>
+          <button className='btn-glow' onClick={() => nav("/mypage")}>
+            마이페이지
+          </button>
+        </div>
       </div>
 
       {/* 🪐 자산 리스트 */}

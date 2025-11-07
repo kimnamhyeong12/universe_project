@@ -35,6 +35,12 @@
   background: linear-gradient(180deg, rgba(0,255,255,.22), rgba(0,255,255,.10));
 }
 
+.btn-outline {
+  background: #1a2a43; /* 어두운 배경 */
+  border: 1px solid #1e90ff; /* 파란색 테두리 */
+  color: #e0f2ff; /* 밝은 텍스트 */
+}
+
 /* 큰 버튼 변형 */
 .btn-neo--lg { padding: 16px 18px; font-size: 1.05rem; border-radius: 12px; }
 
@@ -45,7 +51,8 @@
   border-radius: 8px;
   border: 1px solid rgba(157,234,255,.25);
 }
-.btn-ghost:hover { color: white; border-color: rgba(157,234,255,.5); }
+.btn-ghost:hover { color: #1a2a43; }
+
 
 /* 우측 슬라이드 (폭 확대) */
 .detail-wrap {

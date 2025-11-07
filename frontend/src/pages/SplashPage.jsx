@@ -190,7 +190,7 @@ export default function SplashPage({ onEnter }) {
               team@celestia.app
             </a>
             <button className="btn-glow ml-12" onClick={handleEnter}>
-              3D 우주로 이동
+                우주로 이동
             </button>
           </div>
         </div>
