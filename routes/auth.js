@@ -28,8 +28,10 @@ router.post("/register", async (req, res) => {
 // ==========================
 router.post("/login", async (req, res) => {
   try {
+    console.log("📩 로그인 요청 body:", req.body); // 👈 추가
     const { email, password } = req.body;
     const user = await User.findOne({ email });
+    console.log("🔍 찾은 사용자:", user); // 👈 추가
     if (!user) return res.status(400).json({ error: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -43,9 +45,11 @@ router.post("/login", async (req, res) => {
 
     res.json({ message: "✅ 로그인 성공", token });
   } catch (err) {
+    console.error("로그인 중 오류:", err);
     res.status(500).json({ error: "서버 오류" });
   }
 });
+
 
 // ==========================
 // ✅ JWT 인증 미들웨어
