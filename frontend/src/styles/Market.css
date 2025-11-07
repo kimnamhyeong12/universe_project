@@ -117,7 +117,7 @@
   display: inline-block;
   margin-bottom: 20px;
   background-color: transparent; /* 배경 투명 */
-  color: #8fd1ff; /* 밝은 하늘색 텍스트 */
+  color: #e8e8e8; /* 밝은 하늘색 텍스트 */
   padding: 10px 18px;
   border: 1px solid #8fd1ff; /* 테두리 강조 */
   border-radius: 8px;
@@ -142,10 +142,10 @@
 .btn-glow {
   padding: 10px 18px;
   margin-bottom: 20px;
-  border: 1px solid #00aaff; /* 파란색 테두리 */
-  border-radius: 8px;
-  background-color: #1a2a43; /* 어두운 배경 */
+  background: #1a2a43; /* 어두운 배경 */
+  border: 1px solid #1e90ff; /* 파란색 테두리 */
   color: #e0f2ff; /* 밝은 텍스트 */
+  border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;

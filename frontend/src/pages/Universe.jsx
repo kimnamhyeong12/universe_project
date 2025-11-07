@@ -490,10 +490,17 @@ export default function Universe() {
       )}
       <div className="fixed bottom-6 right-6 z-30">
         <button
-          className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md text-white text-sm font-semibold flex items-center gap-2 shadow-lg transition"
+          className= "btn-glass-nav"
           onClick={() => (window.location.href = "/market")}
         >
           🛒 마켓으로 이동
+        </button>
+
+        <button
+          className= "btn-glass-nav"
+          onClick={() => (window.location.href = "/SplashPage")}
+        >
+          🛒 홈으로 이동
         </button>
       </div>
     </div>

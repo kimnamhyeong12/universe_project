@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import "../styles/landing.css";
+import "../styles/landing.css"; // 'btn-ghost', 'btn-glow' 스타일이 이 파일에 있다고 가정합니다.
 
 export default function MainHeader({ onModalOpen, anchors }) {
   const { user, logout } = useAuth();
@@ -21,11 +21,15 @@ export default function MainHeader({ onModalOpen, anchors }) {
     <header className="fixed top-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-7xl">
         <div className="mx-3 md:mx-6 mt-4 rounded-2xl border border-white/10 bg-black/25 backdrop-blur-xl">
+          
+          {/* --- 1. 상단 바 (로고, 데스크톱 메뉴, 데스크톱 버튼, 모바일 메뉴 버튼) --- */}
           <div className="px-4 md:px-6 py-3 flex items-center justify-between">
+            {/* 로고 */}
             <button className="font-black tracking-widest text-white text-xl" onClick={() => go("home")}>
               CELESTIA
             </button>
 
+            {/* 데스크톱 메뉴 */}
             <nav className="hidden md:flex items-center gap-1">
               <button onClick={() => go("about")}   className="px-3 py-2 text-white/80 hover:text-white">CELESTIA란?</button>
               <button onClick={() => go("guide")}   className="px-3 py-2 text-white/80 hover:text-white">이용 가이드</button>
@@ -35,6 +39,7 @@ export default function MainHeader({ onModalOpen, anchors }) {
               <Link to="/mypage" className="px-3 py-2 text-white/80 hover:text-white">마이페이지</Link>
             </nav>
 
+            {/* 데스크톱 로그인/유저 버튼 (✅ 빠져있던 부분) */}
             <div className="hidden md:flex items-center gap-2">
               <Link to="/universe" className="btn-ghost">3D 입장</Link>
               {user ? (
@@ -47,27 +52,34 @@ export default function MainHeader({ onModalOpen, anchors }) {
               )}
             </div>
 
+            {/* 모바일 '메뉴' 버튼 (✅ 빠져있던 부분) */}
             <button className="md:hidden btn-ghost px-3 py-2" onClick={() => setOpen(v=>!v)}>메뉴</button>
           </div>
 
+          {/* --- 2. 모바일 드롭다운 메뉴 (열릴 때만 보임) --- */}
           {open && (
             <div className="md:hidden px-4 pb-4 grid gap-2">
+              
+              {/* ✅ [수정] 모든 메뉴 링크 스타일 통일 */}
               {["about","guide","gallery","team","shop"].map(k=>(
-                <button key={k} onClick={()=>go(k)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10">
+                <button key={k} onClick={()=>go(k)} className="btn-ghost w-full text-left">
                   {k==="about"?"CELESTIA란?":k==="guide"?"이용 가이드":k==="gallery"?"갤러리":k==="team"?"팀 소개":"구매창"}
                 </button>
               ))}
-              <Link to="/mypage" onClick={()=>setOpen(false)} className="px-3 py-2 rounded-lg hover:bg-white/10">마이페이지</Link>
-              <div className="flex items-center gap-2 pt-2">
-                <Link to="/universe" className="btn-ghost w-full">3D 입장</Link>
-                {user ? (
-                  <button className="btn-ghost w-full" onClick={logout}>로그아웃</button>
-                ) : (
-                  <button className="btn-glow w-full" onClick={()=>{onModalOpen?.("login");setOpen(false);}}>로그인</button>
-                )}
-              </div>
+
+              {/* ✅ [수정] 마이페이지/3D/로그인 버튼 스타일 및 구조 통일 */}
+              <Link to="/mypage" onClick={()=>setOpen(false)} className="btn-glow w-full">
+                마이페이지
+              </Link>
+              <Link to="/universe" className="btn-ghost w-full">3D 입장</Link>
+              {user ? (
+                <button className="btn-ghost w-full" onClick={logout}>로그아웃</button>
+              ) : (
+                <button className="btn-glow w-full" onClick={()=>{onModalOpen?.("login");setOpen(false);}}>로그인</button>
+              )}
             </div>
           )}
+
         </div>
       </div>
     </header>

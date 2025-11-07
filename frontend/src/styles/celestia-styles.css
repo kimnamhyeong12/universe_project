@@ -107,3 +107,39 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   object-fit: cover; /* 이미지가 비율에 맞게 꽉 차도록 */
 }
+
+/* ================================ */
+/* 💎 글래스 내비게이션 버튼 (신규) */
+/* ================================ */
+.btn-glass-nav {
+  /* 레이아웃 및 간격 (Tailwind와 동일) */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* gap-2 */
+  
+  /* 크기 및 폰트 (Tailwind와 동일) */
+  padding: 12px 20px; /* px-5 py-3 */
+  border-radius: 12px; /* rounded-xl */
+  font-size: 14px; /* text-sm */
+  font-weight: 600; /* font-semibold */
+  color: white;
+  
+  /* 글래스 효과 (Tailwind와 동일) */
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  
+  /* 그림자 및 전환 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* shadow-lg */
+  transition: all 0.2s ease-in-out;
+}
+
+/* --- ✨ 호버 시 네온 효과 추가 --- */
+.btn-glass-nav:hover {
+  background: rgba(255, 255, 255, 0.2); /* hover:bg-white/20 */
+  transform: translateY(-1px); /* 살짝 떠오르는 효과 */
+  
+  /* 프로젝트 테마에 맞는 네온 그림자 */
+  box-shadow: 0 0 20px -5px rgba(251, 251, 251, 0.957), /* 바깥쪽 네온 */
+              0 4px 12px rgba(0, 0, 0, 0.3); /* 기존 그림자 */
+}

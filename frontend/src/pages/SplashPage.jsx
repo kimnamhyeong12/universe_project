@@ -76,12 +76,11 @@ export default function SplashPage({ onEnter }) {
     <p className="hero__subtitle">나만의 우주를 소유하고, 창조하세요.</p>
 
     {/* ✅ 입장 버튼 (콘텐츠 레이어 내부 + z-index 보장) */}
-    <button className="btn-glow btn-xl hero__enter" onClick={handleEnter}>
+    <button className="btn-light-glass btn-xl hero__cta" onClick={handleEnter}>
       CELESTIA 입장하기
     </button>
   </div>
 </section>
-
 
       {/* ABOUT */}
       <section ref={refs.about} data-id="about" className="section">
