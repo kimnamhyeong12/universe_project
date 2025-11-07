@@ -112,7 +112,7 @@ const Modal = ({ title, children, isOpen, onClose }) => {
               // ------------------------------
               <form className="space-y-4" onSubmit={handleRegisterSubmit}>
                 <div>
-                  <label className="block text-sm font-bold mb-2" htmlFor="reg-username">아이디 (Username)</label>
+                  <label className="block text-sm font-bold mb-2" htmlFor="reg-username">사용자 이름 (Username)</label>
                   <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="reg-username" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
                 </div>
                 <div>
@@ -147,8 +147,8 @@ const Modal = ({ title, children, isOpen, onClose }) => {
               // 🔓 로그인 폼
               // ------------------------------
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
-                <div>
-                  <label className="block text-sm font-bold mb-2" htmlFor="username">아이디</label>
+                <div> 
+                  <label className="block text-sm font-bold mb-2" htmlFor="username">사용자이름</label>
                   <input className="w-full p-3 rounded bg-slate-800/50 border border-gray-600 focus:border-cyan-500 focus:outline-none focus:bg-slate-700/70" id="username" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
                 </div>
                 <div>
