@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../styles/celestia-styles.css";
+import AppHeader from "../components/AppHeader";
 
 export default function MyPage() {
   const { user } = useAuth();
@@ -236,17 +237,7 @@ export default function MyPage() {
 
   return (
     <div className="min-h-screen pb-24 bg-[radial-gradient(1200px_800px_at_20%_-10%,rgba(24,231,255,.06),transparent_55%),radial-gradient(1200px_800px_at_80%_-10%,rgba(139,92,246,.05),transparent_55%),#030b15]">
-      {/* 상단바 */}
-      <div className="sticky top-0 z-30 backdrop-blur-xl bg-black/30 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Link to="/" className="font-black tracking-widest">
-            CELESTIA
-          </Link>
-          <Link to="/universe" className="btn btn-outline">
-            우주 들어가기
-          </Link>
-        </div>
-      </div>
+      <AppHeader activeLink="mypage" />
 
       {/* 헤더 */}
       <div className="max-w-7xl mx-auto px-6 mt-10">

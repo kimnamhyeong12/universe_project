@@ -10,6 +10,7 @@ import * as THREE from "three";
 import "../styles/celestia-styles.css";
 import PurchasePanel from "../components/PurchasePanel";
 import { useNavigate } from "react-router-dom";
+import AppHeader from "../components/AppHeader";
 
 /* ----------------------------- HUD ----------------------------- */
 function HUD({ username }) {
@@ -20,12 +21,7 @@ function HUD({ username }) {
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500/60 to-indigo-500/60 shadow-lg shadow-cyan-500/30" />
           <div>
-            <div className="text-cyan-300 font-bold tracking-wide text-lg">
-              환영합니다, {username}님!
-            </div>
-            <div className="text-xs text-cyan-200/70">
-              SECTOR: ORION · VISUAL MODE: ULTRA
-            </div>
+            
           </div>
         </div>
       </div>
@@ -426,6 +422,7 @@ export default function Universe() {
 
   return (
     <div className="w-screen h-screen bg-black text-white relative">
+      <AppHeader activeLink="universe" />
       <Canvas camera={{ position: [0, 0, 80], fov: 75 }}>
         <Suspense fallback={<Html center><div className="text-white text-2xl">Loading...</div></Html>}>
           <ambientLight intensity={0.15} />
@@ -461,8 +458,7 @@ export default function Universe() {
         </EffectComposer>
       </Canvas>
 
-      {/* ✅ [수정] 로직은 그대로 두지만, onOpenDetail이 '정보 보기' 버튼을 통해 호출됨 */}
-      {auth.user && <HUD username={auth.user.username} />}
+      
 
       {selected && !showPurchase && (
         <ObjectPanel
@@ -488,21 +484,7 @@ export default function Universe() {
           <div className="card-glass px-4 py-2 text-red-300">{error}</div>
         </div>
       )}
-      <div className="fixed bottom-6 right-6 z-30">
-        <button
-          className= "btn-glass-nav"
-          onClick={() => (window.location.href = "/market")}
-        >
-          🛒 마켓으로 이동
-        </button>
-
-        <button
-          className= "btn-glass-nav"
-          onClick={() => (window.location.href = "/SplashPage")}
-        >
-          🛒 홈으로 이동
-        </button>
-      </div>
+      
     </div>
   );
 }

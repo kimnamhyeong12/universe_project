@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/Market.css";
 import PurchasePanel from "../components/PurchasePanel";
 import Modal from "../components/Modal"; // ✅ 기존 Modal 재활용
+import AppHeader from "../components/AppHeader";
 
 export default function MarketPage() {
   const nav = useNavigate();
@@ -72,25 +73,8 @@ export default function MarketPage() {
 
   return (
     <div className="market-page">
+      <AppHeader activeLink="MarketPage" />
       <h1>🌌 Universe Market</h1>
-
-      {/* 🔙 상단 버튼 (수정됨) */}
-      <div className="mt-8 flex justify-between items-center">
-        {/* 왼쪽 그룹 */}
-        <button className="btn-outline" onClick={() => nav(-1)}>
-          뒤로가기
-        </button>
-
-        {/* 오른쪽 그룹 */}
-        <div className="flex gap-12">
-          <button className="btn-glow" onClick={() => nav("/universe")}>
-            우주 들어가기
-          </button>
-          <button className='btn-glow' onClick={() => nav("/mypage")}>
-            마이페이지
-          </button>
-        </div>
-      </div>
 
       {/* 🪐 자산 리스트 */}
       {loading ? (
@@ -196,6 +180,6 @@ export default function MarketPage() {
         </Modal>
       )}
 
-    </div>
-  );
-}
+    </div> // 👈 .market-page div 닫기
+  ); // 👈 return 문 닫기
+} // 👈 MarketPage 컴포넌트 닫기

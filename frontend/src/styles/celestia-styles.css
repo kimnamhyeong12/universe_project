@@ -143,3 +143,60 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0 20px -5px rgba(251, 251, 251, 0.957), /* 바깥쪽 네온 */
               0 4px 12px rgba(0, 0, 0, 0.3); /* 기존 그림자 */
 }
+
+
+
+
+
+/* === Blue accent (살짝 푸른빛) === */
+:root{
+  --accent-rgb: 77,163,255;               /* #4da3ff 정도 */
+}
+
+/* 카드/프레임 */
+.card-glass{
+  border: 1px solid rgba(var(--accent-rgb), .18);
+  box-shadow:
+    0 0 40px -10px rgba(var(--accent-rgb), .45),
+    inset 0 0 30px rgba(var(--accent-rgb), .05);
+}
+.cel-hud{ border:1px solid rgba(var(--accent-rgb), .25); }
+.detail-panel{ border-left:1px solid rgba(var(--accent-rgb), .15); }
+
+/* 네온 버튼 */
+.btn-neo{
+  border: 1px solid rgba(var(--accent-rgb), .25);
+  background: linear-gradient(180deg,
+              rgba(var(--accent-rgb), .15),
+              rgba(var(--accent-rgb), .06));
+  box-shadow: 0 0 20px -6px rgba(var(--accent-rgb), .40),
+              inset 0 0 14px rgba(var(--accent-rgb), .05);
+  color:#e7fbff;
+}
+.btn-neo:hover{
+  box-shadow: 0 0 32px -6px rgba(var(--accent-rgb), .65),
+              inset 0 0 18px rgba(var(--accent-rgb), .08);
+  background: linear-gradient(180deg,
+              rgba(var(--accent-rgb), .22),
+              rgba(var(--accent-rgb), .10));
+}
+
+/* 탭 */
+.tab{
+  border:1px solid rgba(var(--accent-rgb), .20);
+  background: rgba(var(--accent-rgb), .08);
+  color:#bfe2ff;
+}
+.tab:hover{ background: rgba(var(--accent-rgb), .14); }
+.tab.active{
+  background: rgba(var(--accent-rgb), .22);
+  border-color: rgba(var(--accent-rgb), .50);
+  color:#fff;
+  box-shadow: 0 0 22px -6px rgba(var(--accent-rgb), .55);
+}
+
+/* 글래스 내비 버튼(hover 네온톤 살짝 파랑) */
+.btn-glass-nav:hover{
+  box-shadow: 0 0 20px -5px rgba(var(--accent-rgb), .55),
+              0 4px 12px rgba(0,0,0,.3);
+}

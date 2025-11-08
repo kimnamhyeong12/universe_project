@@ -75,16 +75,13 @@ export default function SiteHeader({ anchors = {} }) {
           {auth?.user ? (
             <>
               <span className="site-header__user">{auth.user.username}님</span>
-              <button className="btn-outline" onClick={() => nav("/mypage")}>
-                마이페이지
-              </button>
               <button className="btn-ghost" onClick={auth.logout}>
                 로그아웃
               </button>
             </>
           ) : (
             <>
-              <button className="btn-outline" onClick={() => setOpenLogin(true)}>
+              <button className="btn-ghost" onClick={() => setOpenLogin(true)}>
                 로그인
               </button>
             </>

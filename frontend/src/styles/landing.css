@@ -30,7 +30,7 @@ html,body{
 .site-header{
   position:fixed;
   inset:0 0 auto 0;
-  z-index:50;
+  z-index:10;
   transition:backdrop-filter .3s, background .3s, border-color .3s;
 }
 .site-header--scrolled{
@@ -44,22 +44,29 @@ html,body{
   width:var(--progress,0%);
   transition:width .15s linear;
 }
-.site-header__inner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:14px 24px;
+.site-header__inner {
+  display: grid;
+  /* 1. (왼쪽) | (가운데) | (오른쪽) 3단 그리드 생성 */
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  min-height: 60px; /* 헤더 최소 높이 고정 (로그인 시 높이 변경 방지) */
+  
 }
-.site-header__brand{
-  font-family:var(--font-display);
-  font-weight:800;
-  letter-spacing:.02em;
-  cursor:pointer;
+.site-header__brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: .02em;
+  cursor: pointer;
+  /* 2. 로고를 왼쪽 칸(1fr)의 시작점에 정렬 */
+  justify-self: start;
 }
-.site-header__nav{
-  display:flex;
-  gap:10px;
+.site-header__nav {
+  display: flex;
+  gap: 10px;
+  /* 3. 메뉴를 가운데 칸(auto)의 중앙에 정렬 */
+  justify-self: center;
 }
 .site-header__link{
   padding:8px 12px;
@@ -76,10 +83,12 @@ html,body{
   background:rgba(0,255,255,.12);
   border:1px solid rgba(0,255,255,.25);
 }
-.site-header__actions{
-  display:flex;
-  gap:10px;
-  align-items:center;
+.site-header__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  /* 4. 버튼을 오른쪽 칸(1fr)의 끝점에 정렬 */
+  justify-self: end;
 }
 .site-header__user{
   opacity:.85;
@@ -100,18 +109,23 @@ html,body{
   transform: translateY(-1px); /* 👈 일관성을 위해 추가 */
 }
 
-.btn-ghost{
-  border:1px solid rgba(157,234,255,.25);
-  color:#9deaff;
-  padding:10px 14px;
-  border-radius:12px;
-  background:transparent;
-  transition:.2s;
+.btn-ghost {
+  /* .btn-outline과 동일하게 수정 */
+  border: 1px solid var(--c-line); /* 👈 흰색 테두리 */
+  color: var(--c-text);          /* 👈 흰색 글씨 */
+  font-weight: 600;              /* 👈 폰트 두께 통일 */
+  
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: transparent;
+  transition: .2s;
 }
-.btn-ghost:hover{
-  border-color:rgba(157,234,255,.5);
-  color:white;
-  transform: translateY(-1px); /* 👈 일관성을 위해 추가 */
+.btn-ghost:hover {
+  /* .btn-outline:hover와 동일하게 수정 */
+  background: rgba(255, 255, 255, .08);
+  color: var(--c-text); /* 👈 호버 시 흰색 글씨 유지 */
+  transform: translateY(-1px);
+  border-color: var(--c-line); /* 👈 호버 시 테두리 색 유지 */
 }
 
 .btn-glow{
@@ -274,9 +288,10 @@ html,body{
 .card-glass{
   background:var(--c-card);
   backdrop-filter:blur(14px);
-  border:1px solid rgba(0,255,255,.18);
+   border:1px solid rgba(77,163,255,.18); 
   border-radius:16px;
-  box-shadow:0 0 40px -10px rgba(0,255,255,.45), inset 0 0 30px rgba(0,255,255,.06);
+  box-shadow:0 0 40px -10px rgba(77,163,255,.45),         /* ⬅︎ 0,255,255 → 77,163,255 */
+    inset 0 0 30px rgba(34, 87, 255, 0.06);      /* ⬅︎ 약한 파랑톤 */
 }
 .p-20{padding:20px}.p-24{padding:24px}
 .card__title{font-weight:800;font-size:1.25rem;margin-bottom:6px}
@@ -289,7 +304,7 @@ html,body{
   font-size:.8rem;
   background:var(--c-cyan-dim);
   color:var(--c-text);
-  border:1px solid rgba(0,255,255,.25);
+  border:1px solid rgba(77,163,255,.25); 
   margin-bottom:8px;
 }
 .plan__name{font-weight:800;font-size:1.35rem}
@@ -389,4 +404,58 @@ html,body{
   .grid-3{grid-template-columns:1fr}
   .masonry{columns:2}
   .site-header__nav{display:none}
+}
+
+
+
+
+/* 1) 테마 변수도 파랑으로(있으면 함께) */
+:root{
+  --c-cyan:#4da3ff;
+  --c-cyan-dim:rgba(77,163,255,.16);
+}
+
+/* 2) 카드 네온 강제 적용 (동일 선택자 충돌 대비) */
+.card-glass{
+  border:1px solid rgba(77,163,255,.24) !important;
+  box-shadow:
+    0 0 40px -10px rgba(77,163,255,.55),
+    inset 0 0 30px rgba(34,87,255,.08) !important;
+}
+
+/* 3) 혹시 의사요소로 글로우를 준 경우까지 함께 덮어쓰기 */
+.card-glass::before,
+.card-glass::after{
+  box-shadow: inherit !important;
+  border-color: inherit !important;
+}
+
+/* 4) 섹션 구분선 네온(있으면) */
+.hr-neon{
+  background: linear-gradient(90deg, rgba(77,163,255,.4), rgba(0,0,0,0)) !important;
+}
+
+
+
+
+/* 네비게이션 활성 탭 */
+.site-header__link.is-active{
+  color:#fff;
+  background: rgba(77,163,255,.14);   /* ⬅︎ 배경 시안 → 파랑 */
+  border: 1px solid rgba(77,163,255,.35);
+  box-shadow: 0 0 24px -6px rgba(77,163,255,.55); /* 선택: 은은한 파란 글로우 */
+}
+
+
+.site-header__progress{
+  background: linear-gradient(90deg,#3c86ff,#a0b8ff);
+}
+
+
+:root{
+  --c-cyan:#4da3ff;
+}
+.site-header__link.is-active{
+  background: color-mix(in srgb, var(--c-cyan) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-cyan) 45%, transparent);
 }
