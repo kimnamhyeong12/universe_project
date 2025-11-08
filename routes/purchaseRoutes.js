@@ -80,17 +80,20 @@ router.get("/user/:userId", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ [POST] 결제 완료 후 DB 반영 (Toss 성공 후 호출)
+// ✅ [POST] 결제 완료 후 DB 반영
 router.post("/confirm", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { orderId, paymentKey, amount, itemName, buyer, planetName, cells } = req.body;
+    const username = req.user.username;
+    const { orderId, paymentKey, amount, itemName, planetName, cells } = req.body;
 
     if (!planetName || !Array.isArray(cells) || cells.length === 0) {
-      return res.status(400).json({ message: "❌ 저장할 구매 정보가 없습니다." });
+      return res.status(400).json({ message: "No purchase data provided." });
     }
 
-    // ✅ 결제 완료 시 editToken 생성
+    const authHeader = req.headers.authorization; // ✅ 토큰 직접 가져오기
+
+    // 셀별 구매 저장
     const records = await Promise.all(
       cells.map((cellId) =>
         Purchase.create({
@@ -101,30 +104,48 @@ router.post("/confirm", verifyToken, async (req, res) => {
           paymentKey,
           amount,
           itemName,
-          buyer,
+          buyer: username,
           transactionDate: new Date(),
-          editToken: uuidv4(), // 🔑 편집용 UUID 생성
+          editToken: uuidv4(),
         })
       )
     );
 
     console.log(`💾 ${records.length}개 셀 구매 정보 저장됨`);
 
+    // ✅ 인증서 자동 발급 요청
+    const axios = require("axios");
+    for (const record of records) {
+      try {
+        const certRes = await axios.post(
+          "http://localhost:5000/api/certificates/issue",
+          { purchaseId: record._id },
+          {
+            headers: { Authorization: authHeader }, // ✅ 여기 변경
+          }
+        );
+
+        console.log("✅ 인증서 발급 성공:", certRes.data.certId);
+      } catch (err) {
+        console.error("❌ 인증서 발급 실패:", err.response?.data || err.message);
+      }
+    }
+
     res.json({
-      message: "✅ 결제 완료 및 구매정보 저장 성공",
+      message: "✅ Purchase confirmation successful + certificate issued",
       orderId,
       paymentKey,
       amount,
       planet: planetName,
-      cells: records.map((r) => ({
-        cellId: r.cellId,
-        editToken: r.editToken, // ✅ 프론트에서 이걸로 /pixel/edit/:token 이동
-      })),
+      buyer: username,
+      purchaseIds: records.map((r) => r._id),
     });
   } catch (err) {
-    console.error("❌ 결제 구매정보 저장 실패:", err);
-    res.status(500).json({ message: "서버 오류", error: err.message });
+    console.error("❌ Payment save error:", err);
+    res.status(500).json({ message: "Server error.", error: err.message });
   }
 });
+
+
 
 module.exports = router;

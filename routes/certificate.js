@@ -1,142 +1,184 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const crypto = require("crypto");
+const sharp = require("sharp");
+const fs = require("fs");
+
 const Certificate = require("../models/Certificate");
+const Purchase = require("../models/Purchase");
 const { authMiddleware } = require("../utils/authMiddleware");
 
 const router = express.Router();
 
-// 🔐 SHA256 해시 함수
 function createHash(payload) {
   return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
-// ====================================================
-// 📜 인증서 발급 (CELESTIA SMALLINFO 스타일)
-// ====================================================
+const planetMap = {
+  "수성": "Mercury",
+  "금성": "Venus",
+  "지구": "Earth",
+  "화성": "Mars",
+  "목성": "Jupiter",
+  "토성": "Saturn",
+  "천왕성": "Uranus",
+  "해왕성": "Neptune",
+  "태양": "Sun",
+};
+
 router.post("/issue", authMiddleware, async (req, res) => {
-  const { assetType, assetId } = req.body;
+  const { purchaseId } = req.body;
 
   try {
+    const purchase = await Purchase.findById(purchaseId).populate("owner");
+    if (!purchase) return res.status(404).json({ error: "Purchase not found" });
+
+    const planetEn = planetMap[purchase.planetName] || purchase.planetName;
     const certId = "CERT-" + Date.now();
+
     const payload = {
       certId,
-      ownerUserId: req.user.id,
-      ownerName: req.user.username,
-      assetType,
-      assetId,
+      ownerUserId: purchase.owner._id,
+      ownerName: purchase.buyer,
+      planetName: planetEn,
+      cellId: purchase.cellId,
+      transactionDate: purchase.transactionDate,
+      objectId: purchase._id,
       issuedAt: new Date().toISOString(),
     };
-
     const hash = createHash(payload);
-    const verifyUrl = `https://yourdomain.com/verify/${certId}`;
-    const qrDataUrl = await QRCode.toDataURL(verifyUrl);
 
-    // 📂 PDF 저장 경로
-    const certDir = path.join(__dirname, "../certs");
-    fs.mkdirSync(certDir, { recursive: true });
-    const certPath = path.join(certDir, `${certId}.pdf`);
+    const qrUrl = "https://celestia.space/verify";
+    const qrDataUrl = await QRCode.toDataURL(qrUrl);
+    const qrBuffer = Buffer.from(qrDataUrl.split(",")[1], "base64");
 
-    // 🪶 A4 PDF 초기화
-    const doc = new PDFDocument({
-      size: "A4",
-      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+    const chunks = [];
+    const doc = new PDFDocument({ size: "A4", margins: { top: 60, bottom: 50, left: 60, right: 60 } });
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", async () => {
+      const pdfBuffer = Buffer.concat(chunks);
+
+      const cert = new Certificate({
+        ownerUserId: purchase.owner._id,
+        ownerName: purchase.buyer,
+        planetName: planetEn,
+        cellId: purchase.cellId,
+        transactionDate: purchase.transactionDate,
+        objectId: purchase._id,
+        hash,
+      });
+      await cert.save();
+
+      // ✅ 파일명 노출 헤더 추가 (프론트에서 읽기 가능)
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${certId}.pdf"`);
+      res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+
+      res.send(pdfBuffer);
     });
-    doc.pipe(fs.createWriteStream(certPath));
-
-    // 배경색
-    doc.rect(0, 0, doc.page.width, doc.page.height)
-       .fill("#FAF5E6");
-
-    // 테두리
-    doc.lineWidth(6)
-       .strokeColor("#645042")
-       .rect(30, 30, doc.page.width - 60, doc.page.height - 60)
-       .stroke();
 
     // 제목
-    doc.fillColor("#282828")
-       .font("Times-Bold")
-       .fontSize(48)
-       .text("CELESTIA", { align: "center", lineGap: 10 });
-    doc.moveDown(1);
+    doc.font("Helvetica-Bold").fontSize(24).text("CELESTIA CERTIFICATE OF OWNERSHIP", { align: "center" });
+    doc.moveDown(2);
 
-    // 오른쪽 이미지/QR 영역
-    const rightX = doc.page.width - 260;
-    const topY = 150;
+    // 기본 정보
+    const startX = 60;
+    let y = 130;
+    const gap = 35;
 
-    // Planet Image
-    doc.lineWidth(1.5)
-       .strokeColor("#88705A")
-       .rect(rightX - 180, topY, 180, 180)
-       .stroke();
-    doc.font("Times-Roman").fontSize(10).fillColor("#666")
-       .text("Planet Image", rightX - 140, topY + 190, { width: 180, align: "center" });
+    doc.font("Helvetica").fontSize(14).text("Owner Name:", startX, y);
+    doc.font("Helvetica-Bold").text(purchase.buyer, startX + 130, y);
+    y += gap;
 
-    // QR 코드
-    const qrBuffer = Buffer.from(qrDataUrl.split(",")[1], "base64");
-    const qrY = topY + 260;
-    doc.image(qrBuffer, rightX - 150, qrY, { fit: [130, 130], align: "center" });
-    doc.fontSize(10).text("QR Code", rightX - 140, qrY + 140, { width: 180, align: "center" });
+    doc.font("Helvetica").text("Celestial Object:", startX, y);
+    doc.font("Helvetica-Bold").text(planetEn, startX + 130, y);
+    y += gap;
 
-    // 본문 설명
-    const bodyText = `Within the CELESTIA registry, each celestial object is uniquely recorded and conserved. This document attests to ownership in the grand expanse of interstellar space, recognized by the CELESTIA authority and preserved in our cosmic archive.`;
-    doc.moveDown(1);
-    doc.font("Times-Roman").fontSize(14).fillColor("#2D2D2D")
-       .text(bodyText, 80, 220, { width: 330, align: "left" });
+    doc.font("Helvetica").text("Cell ID:", startX, y);
+    doc.font("Helvetica-Bold").text(purchase.cellId, startX + 130, y);
+    y += gap;
 
-    // 하단 정보 (작은 폰트)
-    const startY = doc.page.height - 340;
-    const fields = [
-      ["Celestial Object", assetId || "N/A"],
-      ["Owner Name", req.user.username],
-      ["Certificate ID", certId],
-      ["Issued Date", new Date().toLocaleDateString()],
-    ];
+    doc.font("Helvetica").text("Transaction Date:", startX, y);
+    doc.font("Helvetica-Bold").text(
+      new Date(purchase.transactionDate).toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      startX + 130,
+      y
+    );
+    y += gap + 10;
 
-    let y = startY;
-    for (const [label, value] of fields) {
-      doc.font("Times-Roman").fontSize(11).fillColor("#4A3C2C").text(`${label}:`, 100, y);
-      doc.font("Times-Bold").fontSize(13).fillColor("#222").text(value, 240, y);
-      y += 25;
+    // 행성 이미지 crop
+    const planetFileMap = {
+      "수성": "mercury",
+      "금성": "venus",
+      "지구": "earth",
+      "화성": "mars",
+      "목성": "jupiter",
+      "토성": "saturn",
+      "천왕성": "uranus",
+      "해왕성": "neptune",
+      "태양": "sun",
+    };
+
+    const planetFileName = planetFileMap[purchase.planetName] || purchase.planetName.toLowerCase();
+    const planetImagePath = path.join(__dirname, "../frontend/public/textures", `${planetFileName}.jpg`);
+
+    if (fs.existsSync(planetImagePath)) {
+      try {
+        const metadata = await sharp(planetImagePath).metadata();
+        const gridX = 10;
+        const gridY = 10;
+        const [cellX, cellY] = purchase.cellId.split("-").map(Number);
+
+        const cellWidth = Math.floor(metadata.width / gridX);
+        const cellHeight = Math.floor(metadata.height / gridY);
+        const left = cellX * cellWidth;
+        const top = cellY * cellHeight;
+
+        const croppedBuffer = await sharp(planetImagePath)
+          .extract({ left, top, width: cellWidth, height: cellHeight })
+          .resize(320, 160, { fit: "cover" })
+          .toBuffer();
+
+        const imageX = doc.page.width - 380;
+        const imageY = 160;
+        doc.image(croppedBuffer, imageX, imageY, { width: 320, height: 160 });
+      } catch (err) {
+        console.error("Image crop error:", err);
+        doc.font("Helvetica").text("(Image crop failed)", 400, 150);
+      }
     }
 
-    // 서명 영역
-    const lineY = doc.page.height - 120;
-    doc.moveTo(80, lineY).lineTo(doc.page.width - 80, lineY).stroke("#705A42");
-    doc.font("Times-Italic").fontSize(12).fillColor("#444").text("Signed by", 100, lineY + 10);
-    doc.font("Times-BoldItalic").fontSize(16).fillColor("#2E3D6F")
-       .text("CELESTIA AUTHORITY", 100, lineY + 30);
+    // QR 코드
+    const qrX = doc.page.width - 300;
+    const qrY = 360;
+    doc.font("Helvetica").fontSize(12).text("Verification QR Code", qrX, qrY - 20);
+    doc.image(qrBuffer, qrX, qrY, { width: 120, height: 120 });
 
-    // 인장(Seal)
-    doc.circle(doc.page.width - 140, doc.page.height - 100, 40)
-       .lineWidth(3)
-       .strokeColor("#E6BE3E")
-       .stroke();
-    doc.font("Times-Bold").fontSize(10).fillColor("#E6BE3E")
-       .text("CELESTIA", doc.page.width - 170, doc.page.height - 110, { width: 60, align: "center" });
+    // 서명
+    const signPath = path.join(__dirname, "../frontend/public/textures", "sign.png");
+    if (fs.existsSync(signPath)) doc.image(signPath, 400, 500, { width: 150 });
+    doc.font("Helvetica").fontSize(10).text("Authorized Signature", 400, 660);
+
+    doc.moveDown(2);
+    doc.font("Helvetica").fontSize(9).text(
+      "© 2025 CELESTIA SPACE REGISTRY — All Rights Reserved.",
+      0,
+      770,
+      { align: "center" }
+    );
 
     doc.end();
-
-    // DB에 인증서 정보 저장
-    const cert = new Certificate({
-      ...payload,
-      hash,
-      pdfPath: certPath,
-    });
-    await cert.save();
-
-    res.json({
-      message: "✅ CELESTIA Certificate issued",
-      certId,
-      pdfUrl: `/certs/${certId}.pdf`,
-    });
   } catch (err) {
     console.error("❌ Certificate issue error:", err);
-    res.status(500).json({ error: "Failed to issue certificate" });
+    res.status(500).json({ error: "Certificate issue failed" });
   }
 });
 

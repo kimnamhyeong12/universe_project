@@ -76,6 +76,7 @@ async function seedData() {
         imageUrl: "/textures/mercury.jpg",
         orbitRadius: 10,
         orbitSpeed: 0.015,
+        price: 5000,
       },
       {
         name: "금성",
@@ -83,6 +84,7 @@ async function seedData() {
         imageUrl: "/textures/venus.jpg",
         orbitRadius: 14,
         orbitSpeed: 0.012,
+        price: 7000,
       },
       {
         name: "지구",
@@ -90,6 +92,7 @@ async function seedData() {
         imageUrl: "/textures/earth.jpg",
         orbitRadius: 18,
         orbitSpeed: 0.01,
+        price: 9000,
       },
       {
         name: "화성",
@@ -97,6 +100,7 @@ async function seedData() {
         imageUrl: "/textures/mars.jpg",
         orbitRadius: 22,
         orbitSpeed: 0.008,
+        price: 11000,
       },
       {
         name: "목성",
@@ -104,6 +108,7 @@ async function seedData() {
         imageUrl: "/textures/jupiter.jpg",
         orbitRadius: 28,
         orbitSpeed: 0.006,
+        price: 14000,
       },
       {
         name: "토성",
@@ -111,6 +116,7 @@ async function seedData() {
         imageUrl: "/textures/saturn.jpg",
         orbitRadius: 34,
         orbitSpeed: 0.005,
+        price: 17000,
       },
       {
         name: "천왕성",
@@ -118,6 +124,7 @@ async function seedData() {
         imageUrl: "/textures/uranus.jpg",
         orbitRadius: 40,
         orbitSpeed: 0.004,
+        price: 20000,
       },
       {
         name: "해왕성",
@@ -125,13 +132,14 @@ async function seedData() {
         imageUrl: "/textures/neptune.jpg",
         orbitRadius: 46,
         orbitSpeed: 0.0035,
+        price: 23000,
       }
     ].map(p => ({
       ...p,
       galaxy: galaxy._id,
       star: star._id,
       isForSale: true,
-      price: 1000,
+      // price: 1000,
       owner: ownerId,
     }));
 
