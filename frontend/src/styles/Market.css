@@ -21,6 +21,7 @@
   -webkit-background-clip: text; /* 👈 웹킷 브라우저용 */
   background-clip: text;         /* 👈 표준 속성 (이 줄 추가) */
   -webkit-text-fill-color: transparent;
+  margin-top: 60px;
 }
 
 .loading,
