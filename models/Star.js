@@ -4,7 +4,7 @@ const starSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: String,
   mass: Number,
-  radius: Number,
+  diameter: Number,
   temperature: Number,
   description: String,
   imageUrl: String,

@@ -240,7 +240,7 @@ export default function MyPage() {
       <AppHeader activeLink="mypage" />
 
       {/* 헤더 */}
-      <div className="max-w-7xl mx-auto px-6 mt-10">
+      <div className="max-w-7xl mx-auto px-6 mt-28">
         <div className="card-glass p-6 md:p-8">
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-400/70 to-fuchsia-400/60 shadow-[0_0_30px_-6px_rgba(24,231,255,.65)]" />
@@ -255,7 +255,7 @@ export default function MyPage() {
       </div>
 
       {/* 본문 */}
-      <div className="max-w-7xl mx-auto px-6 mt-10 grid lg:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto px-6 mt-28 grid lg:grid-cols-3 gap-6">
         {/* 왼쪽: 내 소유 행성 */}
         <div className="lg:col-span-2 card-glass p-6">
           <div className="text-xl font-bold mb-4">내 소유 행성</div>

@@ -2,20 +2,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader.jsx";
-import Modal from "../components/Modal.jsx";
 import { useAuth } from "../context/AuthContext";
 import "../styles/landing.css";
 
 export default function SplashPage({ onEnter }) {
   const nav = useNavigate();
   const auth = useAuth();
-  const [loginOpen, setLoginOpen] = useState(false);
-
-  useEffect(() => {
-    const open = () => setLoginOpen(true);
-    window.addEventListener("celestia:open-login", open);
-    return () => window.removeEventListener("celestia:open-login", open);
-  }, []);
+ 
 
   const refs = {
     home: useRef(null),
@@ -176,7 +169,7 @@ export default function SplashPage({ onEnter }) {
         </div>
       </footer>
 
-      <Modal title="로그인" isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      
     </>
   );
 }
