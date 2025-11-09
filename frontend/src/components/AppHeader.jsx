@@ -58,7 +58,7 @@ export default function AppHeader({ activeLink }) {
             </>
           ) : (
             <>
-              <button className="btn-outline" onClick={handleLogin}>
+              <button className="btn-ghost" onClick={handleLogin}>
                 로그인
               </button>
             </>

@@ -200,3 +200,61 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0 20px -5px rgba(var(--accent-rgb), .55),
               0 4px 12px rgba(0,0,0,.3);
 }
+
+
+/* --- ⬇️ 이 코드를 celestia-styles.css 맨 끝에 추가/덮어쓰세요 ⬇️ --- */
+
+/* 마이페이지 설정 버튼(.btn-outline, .btn-ghost)을 
+   웹사이트 테마(.btn-neo)와 동일하게 덮어쓰기 
+   (레이아웃 변경 없음)
+*/
+
+/* '프로필 수정', '알림 설정', '보안 관리' 버튼 */
+.btn-outline {
+  /* .btn-neo 스타일 적용 */
+  border: 1px solid rgba(var(--accent-rgb, 77,163,255), .25);
+  background: linear-gradient(180deg,
+              rgba(var(--accent-rgb, 77,163,255), .15),
+              rgba(var(--accent-rgb, 77,163,255), .06));
+  box-shadow: 0 0 20px -6px rgba(var(--accent-rgb, 77,163,255), .40),
+              inset 0 0 14px rgba(var(--accent-rgb, 77,163,255), .05);
+  color: #e7fbff;
+
+  
+}
+
+.btn-outline:hover {
+  /* .btn-neo:hover 스타일 적용 */
+  box-shadow: 0 0 32px -6px rgba(var(--accent-rgb, 77,163,255), .65),
+              inset 0 0 18px rgba(var(--accent-rgb, 77,163,255), .08);
+  background: linear-gradient(180deg,
+              rgba(var(--accent-rgb, 77,163,255), .22),
+              rgba(var(--accent-rgb, 77,163,255), .10));
+  transform: translateY(-1px);
+  color: #fff; /* 👈 호버 시 텍스트 더 밝게 */
+}
+
+
+/* '홈으로' 버튼 */
+.btn-ghost {
+  /* .btn-neo 스타일 적용 */
+  border: 1px solid rgba(var(--accent-rgb, 77,163,255), .25);
+  background: linear-gradient(180deg,
+              rgba(var(--accent-rgb, 77,163,255), .15),
+              rgba(var(--accent-rgb, 77,163,255), .06));
+  box-shadow: 0 0 20px -6px rgba(var(--accent-rgb, 77,163,255), .40),
+              inset 0 0 14px rgba(var(--accent-rgb, 77,163,255), .05);
+  color: #e7fbff;
+
+  
+}
+.btn-ghost:hover {
+  /* .btn-neo:hover 스타일 적용 */
+  box-shadow: 0 0 32px -6px rgba(var(--accent-rgb, 77,163,255), .65),
+              inset 0 0 18px rgba(var(--accent-rgb, 77,163,255), .08);
+  background: linear-gradient(180deg,
+              rgba(var(--accent-rgb, 77,163,255), .22),
+              rgba(var(--accent-rgb, 77,163,255), .10));
+  transform: translateY(-1px);
+  color: #fff;
+}

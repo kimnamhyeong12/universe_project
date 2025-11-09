@@ -12,6 +12,8 @@ import PurchasePanel from "../components/PurchasePanel";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "../components/AppHeader";
 
+
+
 /* ----------------------------- HUD ----------------------------- */
 function HUD({ username }) {
   // ... (이하 동일)
@@ -273,19 +275,44 @@ function DetailSlide({ open, data, onClose }) {
           <button className={`tab ${tab === "inner" ? "active" : ""}`} onClick={() => setTab("inner")}>내부구조</button>
         </div>
 
-        {/* 탭 콘텐츠 (유지) */}
+        {/* 탭 콘텐츠 (수정됨) */}
         <div className="mt-5 min-h-[340px]">
           {tab === "info" && (
             <div className="space-y-4 text-cyan-100/90">
-              <p className="leading-relaxed">{data?.description || "이 천체에 대한 설명이 준비 중입니다."}</p>
+
+              {/* 1. API에서 오는 'description'을 표시합니다. */}
+              <p className="leading-relaxed">
+                {data?.description || "이 천체에 대한 설명이 준비 중입니다."}
+              </p>
+              
+              {/* 2. InfoBox 4개 (좌표, 온도, 지름, 질량) */}
               <div className="grid grid-cols-2 gap-3">
-                <InfoBox label="유형" value={data?.type || "-"} />
-                <InfoBox label="등급" value={data?.type === "star" ? "G형" : "-"} />
+
+                {/* 온도 (Temperature) - (API에서 data.temperature를 받는다고 가정) */}
+                <InfoBox 
+                  label="평균 온도" 
+                  value={data?.temperature ? `${data.temperature}°C` : "-"} 
+                />
+                
+                {/* 지름 (Diameter) - (API에서 data.diameter를 받는다고 가정) */}
+                <InfoBox 
+                  label="지름" 
+                  value={data?.diameter ? `${data.diameter.toLocaleString()} km` : "-"} 
+                />
+                
+                {/* 질량 (Mass) - (API에서 data.mass를 받는다고 가정) */}
+                <InfoBox 
+                  label="질량" 
+                  value={data?.mass ? `${data.mass} (10²⁴ kg)` : "-"} 
+                />
+                
+                {/* 좌표 (Coordinates) - (유지) */}
                 <InfoBox label="좌표" value={posText} />
-                <InfoBox label="상태" value={<span className="text-emerald-300">정상</span>} />
+
               </div>
             </div>
           )}
+          {/* ... (이하 tab === "images" 등) ... */}
           {tab === "images" && (
             <div className="grid grid-cols-2 gap-3">
               <Thumb url={data?.imageUrl || "/textures/planet_default.jpg"} />

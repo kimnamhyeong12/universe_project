@@ -1,5 +1,6 @@
 import React, { useState } from 'react'; 
 import { useAuth } from '../context/AuthContext';
+import "../styles/resister.css";
 
 // =============================================================
 // Modal 컴포넌트: 로그인/회원가입 전용 모달 + 일반 모달 공용

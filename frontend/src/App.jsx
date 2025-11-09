@@ -1,5 +1,7 @@
 // src/App.jsx
-import React, { useEffect, useState } from "react";
+
+// ✅ [추가] useEffect, useState 임포트
+import React, { useEffect, useState } from "react"; 
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -8,10 +10,11 @@ import LoadingScreen from "./components/LoadingScreen.jsx";
 import Universe from "./pages/Universe.jsx";
 import MyPage from "./pages/mypage.jsx";
 import MarketPage from "./pages/MarketPage.jsx";
-
-// ✅ PixelEditor, ViewPlanet 페이지 추가
 import PixelEditor from "./pages/PixelEditor.jsx";
-import ViewPlanet from "./pages/ViewPlanet.jsx"; // 🔥 추가 라인
+import ViewPlanet from "./pages/ViewPlanet.jsx"; 
+
+// ✅ [추가] Modal 컴포넌트 임포트
+import Modal from "./components/Modal.jsx"; 
 
 // Toss
 import { CheckoutPage } from "./pages/Checkout";
@@ -21,6 +24,7 @@ import { FailPage } from "./pages/Fail";
 
 
 function LandingShell() {
+  // ... (이 부분은 수정 없음) ...
   const [view, setView] = useState("splash");
   const loc = useLocation();
 
@@ -45,30 +49,36 @@ function LandingShell() {
 }
 
 export default function App() {
+  
+  // ✅ [추가] SplashPage에서 가져온 로그인 모달 상태
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  // ✅ [추가] SplashPage에서 가져온 로그인 이벤트 리스너
+  useEffect(() => {
+    const open = () => setLoginOpen(true);
+    window.addEventListener("celestia:open-login", open);
+    return () => window.removeEventListener("celestia:open-login", open);
+  }, []);
+
   return (
     <AuthProvider>
-        <Routes>
-          <Route path="/" element={<LandingShell />} />
-          <Route path="/universe" element={<Universe />} />
-          <Route path="/market" element={<MarketPage />} />
-          <Route path="/mypage" element={<MyPage />} />
+      
+      {/* ✅ [추가] Routes 밖에 Modal을 배치하여 전역으로 사용 */}
+      <Modal title="로그인" isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
 
-          {/* ✅ 픽셀 편집기 라우트 */}
-          <Route path="/pixel/edit/:token" element={<PixelEditor />} />
+      <Routes>
+        <Route path="/" element={<LandingShell />} />
+        <Route path="/universe" element={<Universe />} />
+        <Route path="/market" element={<MarketPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/pixel/edit/:token" element={<PixelEditor />} />
+        <Route path="/view/:planet" element={<ViewPlanet />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/sandbox" element={<CheckoutPage />} />
+        <Route path="/sandbox/success" element={<SuccessPage />} />
+        <Route path="/sandbox/fail" element={<FailPage />} />
+      </Routes>
 
-          {/* ✅ 구경하기 라우트 추가 */}
-          <Route path="/view/:planet" element={<ViewPlanet />} />
-
-          {/* ✅ 잘못된 경로 접근 시 홈으로 리디렉션 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-
-          {/* 토스 라우트*/}
-          <Route path="/sandbox" element={<CheckoutPage />} />
-          <Route path="/sandbox/success" element={<SuccessPage />} />
-          <Route path="/sandbox/fail" element={<FailPage />} />
-
-
-        </Routes>
     </AuthProvider>
   );
 }

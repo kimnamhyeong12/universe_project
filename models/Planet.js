@@ -5,6 +5,10 @@ const planetSchema = new mongoose.Schema({
   description: String,
   imageUrl: String,
 
+  diameter: { type: Number }, // 지름 (km)
+  mass: { type: Number },     // 질량 (10^24 kg)
+  temperature: { type: Number }, // 평균 온도 (°C)
+
   galaxy: { type: mongoose.Schema.Types.ObjectId, ref: "Galaxy" },
   star: { type: mongoose.Schema.Types.ObjectId, ref: "Star" }, // 중요! 어떤 별을 도는지
 
