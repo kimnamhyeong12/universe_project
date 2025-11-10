@@ -15,9 +15,10 @@ router.get("/", async (req, res) => {
   try {
     const [planets, stars, galaxies, blackholes] = await Promise.all([
       Planet.find({ isForSale: true }).select("name imageUrl price description"),
-      Star.find({ isForSale: true }).select("name type description"),
-      Galaxy.find({ isForSale: true }).select("name description size numberOfStars"),
-      Blackhole.find({ isForSale: true }).select("name description mass radius"),
+      Star.find({ isForSale: true }).select("name type description name imageUrl price"),
+      // 밑에 은하계, 블랙홀 구매 할거면 .select("palnet, star 처럼 포맷하면 됨 지우지마.")
+      // Galaxy.find({ isForSale: true }).select("name description size numberOfStars"),
+      // Blackhole.find({ isForSale: true }).select("name description mass radius"),
     ]);
 
     res.json({

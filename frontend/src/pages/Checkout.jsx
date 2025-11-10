@@ -64,7 +64,7 @@ export function CheckoutPage() {
   return (
     <div className="wrapper w-100">
       <div className="max-w-540 w-100">
-        <h2 className="title text-center">
+        <h2 className="title text-center"  style={{ color: "#fff" }}>
           💳 {orderName}
         </h2>
         <p className="text-center color-grey">

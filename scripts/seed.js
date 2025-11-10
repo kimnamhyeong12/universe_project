@@ -49,7 +49,7 @@ async function seedData() {
       description: "가장 가까운 대형 은하",
       imageUrl: "/textures/galaxy.png",
       position: { x: 10, y: 0, z: 20 },
-      isForSale: true,
+      isForSale: false,
       owner: ownerId,
     });
 
@@ -64,8 +64,9 @@ async function seedData() {
       imageUrl: "/textures/sun.jpg",
       position: { x: 0, y: 0, z: 0 },
       galaxy: galaxy._id,
-      isForSale: false,
+      isForSale: true,
       owner: ownerId,
+      price: 500000000,
     });
 
     // 🪐 태양계 8개 행성 생성
@@ -184,7 +185,7 @@ async function seedData() {
       imageUrl: "/textures/blackhole.mp4",
       galaxy: galaxy._id,
       position: { x: 30, y: 10, z: -10 },
-      isForSale: true,
+      isForSale: false,
       price: 5000,
       owner: ownerId,
     });
