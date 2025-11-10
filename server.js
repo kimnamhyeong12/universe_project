@@ -67,6 +67,7 @@ const purchaseRoutes = require("./routes/purchaseRoutes");
 const pixelRoutes = require("./routes/pixelRoutes");
 const paymentsRouter = require("./payments/payments.router"); // ✅ 토스 결제 라우터
 
+
 // ======== 라우트 연결 ========
 app.use("/api/auth", authRoutes);
 app.use("/api/planets", planetRoutes);
@@ -79,6 +80,7 @@ app.use("/api/market", marketRoutes); // ✅ 마켓 라우트 연결
 app.use("/api/purchase", purchaseRoutes);
 app.use("/api/pixels", pixelRoutes);
 app.use("/payments", paymentsRouter); // ✅ 토스 결제 라우터 통합 연결
+app.use("/api/payments", paymentsRouter);
 
 // ======== 인증서 및 정적 파일 공개 ========
 app.use("/certs", express.static(path.join(__dirname, "certs")));

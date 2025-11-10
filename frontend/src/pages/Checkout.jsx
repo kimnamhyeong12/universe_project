@@ -7,37 +7,61 @@ const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 export function CheckoutPage() {
   const [ready, setReady] = useState(false);
   const [widgets, setWidgets] = useState(null);
-  const [amount, setAmount] = useState({
-    currency: "KRW",
-    value: 0,
-  });
+  const [amount, setAmount] = useState({ currency: "KRW", value: 0 });
   const [orderName, setOrderName] = useState("상품명");
   const paymentMethodWidgetRef = useRef(null);
 
-  // ✅ (1) URL 파라미터 읽기
+  // ✅ (1) sessionId만 URL에서 읽기
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const price = parseInt(params.get("amount") || "0", 10);
-    const name = params.get("orderName") || "Celestia 자산 결제";
+    const sessionId = params.get("sessionId");
 
-    setAmount({ currency: "KRW", value: price });
-    setOrderName(name);
+    if (!sessionId) {
+      alert("유효하지 않은 결제 세션입니다.");
+      window.location.href = "/market";
+      return;
+    }
+
+    // ✅ (2) 백엔드에서 sessionId로 결제 정보 불러오기
+    async function fetchSessionData() {
+      try {
+        const res = await fetch(`http://localhost:5000/api/payments/session/${sessionId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert("결제 정보를 불러올 수 없습니다.");
+          window.location.href = "/market";
+          return;
+        }
+
+        // 서버에서 받은 금액/상품명 반영
+        setOrderName(data.name || "Celestia 자산 결제");
+        setAmount({ currency: "KRW", value: data.amount || 0 });
+        setReady(true);
+      } catch (err) {
+        console.error("❌ 결제 세션 불러오기 실패:", err);
+        alert("결제 정보를 불러오는 중 오류가 발생했습니다.");
+        window.location.href = "/market";
+      }
+    }
+
+    fetchSessionData();
   }, []);
 
-  // ✅ (2) Toss 위젯 로드
+  // ✅ (3) Toss 위젯 초기화
   useEffect(() => {
-    async function fetchPaymentWidgets() {
+    async function initWidgets() {
       const tossPayments = await loadTossPayments(clientKey);
       const widgets = tossPayments.widgets({ customerKey: ANONYMOUS });
       setWidgets(widgets);
     }
 
-    fetchPaymentWidgets();
+    initWidgets();
   }, []);
 
-  // ✅ (3) Toss 위젯 렌더링
+  // ✅ (4) Toss 위젯 렌더링
   useEffect(() => {
-    async function renderPaymentWidgets() {
+    async function renderWidgets() {
       if (!widgets || amount.value === 0) return;
 
       await widgets.setAmount(amount);
@@ -57,14 +81,14 @@ export function CheckoutPage() {
       setReady(true);
     }
 
-    renderPaymentWidgets();
+    renderWidgets();
   }, [widgets, amount]);
 
-  // ✅ (4) UI
+  // ✅ (5) UI
   return (
     <div className="wrapper w-100">
       <div className="max-w-540 w-100">
-        <h2 className="title text-center"  style={{ color: "#fff" }}>
+        <h2 className="title text-center" style={{ color: "#fff" }}>
           💳 {orderName}
         </h2>
         <p className="text-center color-grey">
@@ -82,7 +106,7 @@ export function CheckoutPage() {
               try {
                 await widgets?.requestPayment({
                   orderId: generateRandomString(),
-                  orderName: orderName,
+                  orderName,
                   customerName: "테스트 사용자",
                   successUrl: "http://localhost:5173/sandbox/success",
                   failUrl: "http://localhost:5173/sandbox/fail",

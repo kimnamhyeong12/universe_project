@@ -155,20 +155,43 @@ export default function MarketPage() {
           <div className="flex flex-col gap-3 mt-5">
             <button
               className="btn-neo btn-neo--lg"
-              onClick={() => {
-                // 💳 Toss 결제 위젯 페이지로 이동
+              onClick={async () => {
                 const totalAmount =
                   (selectedAsset?.selectedCells?.length || 1) *
                   (selectedAsset?.price || 1000);
 
-                // 쿼리스트링으로 금액, 이름 전달
-                window.location.href = `/sandbox?orderName=${encodeURIComponent(
-                  selectedAsset?.name
-                )}&amount=${totalAmount}`;
+                try {
+                  // ✅ 서버로 POST 요청을 보내서 결제 준비 세션 생성
+                  const res = await fetch("http://localhost:5000/api/payments/start", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${user?.token}`,
+                    },
+                    body: JSON.stringify({
+                      name: selectedAsset?.name,
+                      assetId: selectedAsset?._id,
+                      amount: totalAmount,
+                    }),
+                  });
+
+                  const data = await res.json();
+                  if (!res.ok) {
+                    alert("결제 세션 생성 실패: " + data.message);
+                    return;
+                  }
+
+                  // ✅ 서버에서 받은 세션 ID로 결제 페이지 이동
+                  window.location.href = `/sandbox?sessionId=${data.sessionId}`;
+                } catch (err) {
+                  console.error("❌ 결제 요청 중 오류:", err);
+                  alert("결제 요청 중 오류가 발생했습니다.");
+                }
               }}
             >
               Toss 결제창 열기
             </button>
+
 
             <button
               className="btn-neo btn-neo--lg"
