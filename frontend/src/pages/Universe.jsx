@@ -175,7 +175,6 @@ function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
   const isStar = data.type === "star";
   const navigate = useNavigate();
 
-  // ✅ 수정된 구매 이동 함수
   const handlePurchase = () => {
     navigate("/market", {
       state: {
@@ -190,9 +189,15 @@ function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
     });
   };
 
+  // ⭐ WPLACE 찍기
+  const handleWplace = () => {
+    navigate(`/wplace/${data.name}`);
+  };
+
   return (
     <div className="absolute left-8 md:left-10 z-20 top-28 md:top-32">
       <div className="card-glass panel-tall panel-narrow w-[360px] sm:w-[380px] md:w-[400px] p-6 md:p-7">
+
         {/* 헤더 */}
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-amber-400/70 to-yellow-200/50 shadow-[0_0_30px_-5px_rgba(255,200,0,0.8)]" />
@@ -206,7 +211,7 @@ function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
           </div>
         </div>
 
-        {/* ✅ [수정] 인포 박스 4줄 대신 이미지 추가 */}
+        {/* 이미지 */}
         <div className="mt-4">
           <img
             src={data.imageUrl || "/textures/planet_default.jpg"}
@@ -215,29 +220,37 @@ function ObjectPanel({ data, onClose, onOpenDetail, onBuy }) {
           />
         </div>
 
-        {/* 액션 (유지) */}
+        {/* 버튼 4개 */}
         <div className="mt-5 flex flex-col gap-3">
           <button className="btn-neo btn-neo--lg" onClick={onOpenDetail}>
             정보 보기
           </button>
+
           <button className="btn-neo btn-neo--lg" onClick={handlePurchase}>
             구매하기
           </button>
-          <button
-            className="btn-neo btn-neo--lg"
-            onClick={() => navigate(`/view/${data.name}`)}
-          >
+
+          <button className="btn-neo btn-neo--lg" onClick={() => navigate(`/view/${data.name}`)}>
             구경하기
+          </button>
+
+          {/* 🎨 여기가 WPLACE 추가 버튼 */}
+          <button
+            className="btn-neo btn-neo--lg bg-[#00ffff33] hover:bg-[#00ffff55]"
+            onClick={handleWplace}
+          >
+            🎨 WPLACE 모드로 찍기
           </button>
         </div>
 
-        {/* 푸터 */}
+        {/* 닫기 */}
         <div className="mt-4 flex items-center justify-between text-xs text-cyan-200/70">
           <span>VER. 3.2 · HYPERDRIVE</span>
           <button className="hover:text-white transition" onClick={onClose}>
             닫기 ✖
           </button>
         </div>
+
       </div>
     </div>
   );

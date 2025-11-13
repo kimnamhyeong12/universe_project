@@ -1,14 +1,10 @@
-// src/pages/ViewPlanet.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import "../styles/celestia-styles.css";
 
-// ===== [공통 규격 - 백엔드와 동일] =====
 const GRID_W = 10;
 const GRID_H = 10;
 const CELL_PIXEL_W = 50;
 const CELL_PIXEL_H = 50;
-// ======================================
 
 const planetImages = {
   수성: "/textures/mercury.jpg",
@@ -25,126 +21,238 @@ const planetImages = {
 export default function ViewPlanet() {
   const { planet } = useParams();
   const canvasRef = useRef(null);
+
   const [pixelData, setPixelData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [hoverInfo, setHoverInfo] = useState(null);
 
-  // ✅ 자동 새로고침 (편집 후 돌아올 때)
+  const [zoom, setZoom] = useState(1);
+  const [zoomMin, setZoomMin] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  const dragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const panStart = useRef({ x: 0, y: 0 });
+
+  // ⭐ 기본 화면 중앙 정렬은 "단 1번만" 수행
+  const firstRender = useRef(true);
+
+  // 화면 크기
+  const VIEW_W = 1200;
+  const VIEW_H = 600;
+
+  // 🔥 픽셀 데이터 로딩
   useEffect(() => {
-    const lastEdited = localStorage.getItem("lastEditedPlanet");
-    if (lastEdited === planet) {
-      localStorage.removeItem("lastEditedPlanet");
-      window.location.reload();
+    async function load() {
+      const res = await fetch(`http://localhost:5000/api/pixels/planet/${planet}`);
+      const data = await res.json();
+      setPixelData(data);
     }
+    load();
   }, [planet]);
 
-  // ✅ 픽셀 데이터 불러오기
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`http://localhost:5000/api/pixels/planet/${planet}?t=${Date.now()}`);
-        if (!res.ok) throw new Error("픽셀 데이터를 불러올 수 없습니다.");
-        const data = await res.json();
-        setPixelData(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("❌ 픽셀 불러오기 오류:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [planet]);
+  // 🔥 pan 범위 제한
+  function clampPan(px, py) {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: px, y: py };
 
-  // ✅ 캔버스 렌더링 (GRID 기준 정확히 맞춤)
-  useEffect(() => {
+    const cw = canvas.width;
+    const ch = canvas.height;
+
+    const minX = Math.min(0, VIEW_W - cw);
+    const minY = Math.min(0, VIEW_H - ch);
+
+    return {
+      x: Math.min(0, Math.max(px, minX)),
+      y: Math.min(0, Math.max(py, minY)),
+    };
+  }
+
+  // 🔥 캔버스 렌더링
+  const drawCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.src = planetImages[planet];
 
-    const base = new Image();
-    base.src = planetImages[planet] || "/textures/planet_default.jpg";
+    img.onload = () => {
+      let autoZoom = zoom;
 
-    base.onload = () => {
-      const texW = base.naturalWidth;
-      const texH = base.naturalHeight;
+      // ⭐ 처음 로딩일 때만 fit-to-screen
+      if (firstRender.current && zoom === 1) {
+        const scaleW = VIEW_W / img.width;
+        const scaleH = VIEW_H / img.height;
+        autoZoom = Math.min(scaleW, scaleH);
 
-      // 셀 기준 비율 (GRID 기반)
-      const cellW = texW / GRID_W;
-      const cellH = texH / GRID_H;
+        setZoom(autoZoom);
+        setZoomMin(autoZoom);
+      }
 
-      // 실제 캔버스 크기: GRID 전체 + 픽셀 크기 반영
-      canvas.width = texW;
-      canvas.height = texH;
+      const baseW = img.width * autoZoom;
+      const baseH = img.height * autoZoom;
 
-      // 배경 그리기
-      ctx.drawImage(base, 0, 0, texW, texH);
+      canvas.width = baseW;
+      canvas.height = baseH;
 
-      // 각 셀의 픽셀 데이터 렌더링
+      ctx.drawImage(img, 0, 0, baseW, baseH);
+
+      // ⭐ 중앙 정렬은 오직 처음 로딩 때만 실행
+      if (firstRender.current) {
+        setPan({
+          x: (VIEW_W - baseW) / 2,
+          y: (VIEW_H - baseH) / 2,
+        });
+        firstRender.current = false; // 🔥 이후 절대 중앙 정렬 금지
+      }
+
+      // 픽셀 채우기
+      const cellW = baseW / GRID_W;
+      const cellH = baseH / GRID_H;
+
       pixelData.forEach((cell) => {
-        const [cx, cy] = String(cell.cellId).split("-").map(Number);
-        if (isNaN(cx) || isNaN(cy)) return;
+        const [cx, cy] = cell.cellId.split("-").map(Number);
+        const sx = cx * cellW;
+        const sy = cy * cellH;
 
-        // 셀의 시작 좌표 (이미지 상 위치)
-        const startX = cx * cellW;
-        const startY = cy * cellH;
-
-        // 셀 내부 픽셀 스케일 변환
-        const scaleX = cellW / CELL_PIXEL_W;
-        const scaleY = cellH / CELL_PIXEL_H;
+        const pxW = cellW / CELL_PIXEL_W;
+        const pxH = cellH / CELL_PIXEL_H;
 
         (cell.pixels || []).forEach((p) => {
-          const px = startX + p.x * scaleX;
-          const py = startY + p.y * scaleY;
           ctx.fillStyle = p.color;
-          ctx.fillRect(px, py, scaleX, scaleY);
+          ctx.fillRect(
+            sx + p.x * pxW,
+            sy + p.y * pxH,
+            pxW,
+            pxH
+          );
         });
       });
     };
-  }, [pixelData, planet]);
+  };
 
-  // ✅ 로딩 중
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen text-cyan-200 text-2xl">
-        🚀 행성 데이터를 불러오는 중입니다...
-      </div>
-    );
-  }
+  useEffect(drawCanvas, [zoom, pixelData]);
 
-  // ✅ 메인 렌더링
+  // 🔍 줌 (최소 줌 이하로 축소 금지)
+  const handleWheel = (e) => {
+    e.preventDefault();
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    let newZoom = zoom + (e.deltaY > 0 ? -0.1 : 0.1);
+
+    // ⭐ zoomMin 이하로 축소 불가
+    newZoom = Math.max(zoomMin, Math.min(newZoom, 4));
+
+    const zoomRatio = newZoom / zoom;
+    setZoom(newZoom);
+
+    // 기존 pan 유지 + 마우스 기준의 자연스러운 줌
+    setTimeout(() => {
+      const newPanX = pan.x - (mouseX * zoomRatio - mouseX);
+      const newPanY = pan.y - (mouseY * zoomRatio - mouseY);
+      setPan(clampPan(newPanX, newPanY));
+    }, 0);
+  };
+
+  // 🖱 드래그 이동
+  const onMouseDown = (e) => {
+    dragging.current = true;
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    panStart.current = { ...pan };
+  };
+  const onMouseUp = () => (dragging.current = false);
+
+  const onMouseMove = (e) => {
+    if (dragging.current) {
+      const dx = e.clientX - dragStart.current.x;
+      const dy = e.clientY - dragStart.current.y;
+      setPan(clampPan(panStart.current.x + dx, panStart.current.y + dy));
+    }
+
+    // Hover
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const realX = e.clientX - rect.left;
+    const realY = e.clientY - rect.top;
+
+    if (realX < 0 || realY < 0 || realX > canvas.width || realY > canvas.height) {
+      setHoverInfo(null);
+      return;
+    }
+
+    const cellW = canvas.width / GRID_W;
+    const cellH = canvas.height / GRID_H;
+
+    const cx = Math.floor(realX / cellW);
+    const cy = Math.floor(realY / cellH);
+
+    const id = `${cx}-${cy}`;
+    const cell = pixelData.find((p) => p.cellId === id);
+
+    if (!cell || !cell.ownerName) return setHoverInfo(null);
+
+    setHoverInfo({
+      owner: cell.ownerName,
+      cellId: id,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#030b15] text-white">
-      <h1 className="text-4xl font-extrabold mb-3 flex items-center gap-2">
-        {planet} 구경하기 <span role="img" aria-label="planet">🌍</span>
-      </h1>
-      <p className="text-cyan-300/80 mb-6">
-        이 행성의 모든 유저가 남긴 픽셀 아트가 표시됩니다.
-      </p>
+    <div className="flex flex-col items-center bg-black min-h-screen text-white pb-2">
 
-      {/* ✅ 뷰포트 */}
+      <h1 className="text-4xl mt-2">{planet} 구경하기 🌍</h1>
+
       <div
-        className="border border-cyan-400/50 rounded-lg p-2 bg-black/40 shadow-xl flex justify-center items-center overflow-hidden"
         style={{
-          width: "750px",
-          height: "420px",
+          width: VIEW_W,
+          height: VIEW_H,
+          overflow: "hidden",
+          border: "2px solid cyan",
+          position: "relative",
         }}
+        onWheel={handleWheel}
+        onMouseMove={onMouseMove}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
       >
         <canvas
           ref={canvasRef}
           style={{
-            display: "block",
-            width: "100%",
-            height: "100%",
+            position: "absolute",
+            left: pan.x,
+            top: pan.y,
             imageRendering: "pixelated",
           }}
         />
       </div>
 
-      <div className="mt-8 flex gap-4">
+      {hoverInfo && (
+        <div
+          className="fixed px-2 py-1 bg-black/80 border border-cyan-400 rounded text-cyan-200"
+          style={{ top: hoverInfo.y + 10, left: hoverInfo.x + 10 }}
+        >
+          <b>{hoverInfo.owner}</b>
+          <div>{hoverInfo.cellId}</div>
+        </div>
+      )}
+
+      <div className="mt-4 flex gap-4">
         <Link to="/universe" className="btn-neo btn-neo--lg">
-          🌌 우주로 돌아가기
+          🌌 우주
         </Link>
         <Link to="/market" className="btn-neo btn-neo--lg">
-          🛒 마켓 보기
+          🛒 마켓
         </Link>
       </div>
     </div>

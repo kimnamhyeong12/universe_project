@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { HexColorPicker, HexColorInput } from "react-colorful"; // 🎨 항상 열린 파레트용
+import { HexColorPicker, HexColorInput } from "react-colorful";
 import "../styles/celestia-styles.css";
 
 const GRID_W = 10;
@@ -31,6 +31,8 @@ export default function PixelEditor() {
 
   const [color, setColor] = useState("#00ffff");
   const [pixels, setPixels] = useState([]);
+  const [history, setHistory] = useState([]); // 🔥 Undo 스택
+  const [isDrawing, setIsDrawing] = useState(false); // 🔥 드래그 중 여부
   const [baseImg, setBaseImg] = useState(null);
   const [eraseMode, setEraseMode] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 });
@@ -38,7 +40,33 @@ export default function PixelEditor() {
   const [cellId, setCellId] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // ✅ UUID 토큰으로 셀 정보 및 픽셀 불러오기
+  // ================================
+  // 🔥 Ctrl+Z Undo 기능
+  // ================================
+  const undo = () => {
+    setHistory((prev) => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+
+      setPixels(last);
+      return prev.slice(0, -1);
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "z") {
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pixels, history]);
+
+  // ================================
+  // 🔥 픽셀 불러오기
+  // ================================
   useEffect(() => {
     const jwt =
       localStorage.getItem("jwt") ||
@@ -74,14 +102,15 @@ export default function PixelEditor() {
           setLoading(false);
         };
       } catch (err) {
-        console.error("❌ 픽셀 불러오기 실패:", err);
-        alert("서버 연결 오류가 발생했습니다.");
+        alert("서버 오류");
         navigate("/mypage");
       }
     })();
   }, [token, navigate]);
 
-  // ✅ 캔버스 렌더링 (행성 셀 비율 반영)
+  // ================================
+  // 🔥 캔버스 렌더링
+  // ================================
   useEffect(() => {
     if (!canvasRef.current || !baseImg || !planet || !cellId) return;
     const ctx = canvasRef.current.getContext("2d");
@@ -117,10 +146,8 @@ export default function PixelEditor() {
     canvas.width = targetW;
     canvas.height = targetH;
 
-    // 배경 (해당 셀 부분만 크롭)
     ctx.drawImage(baseImg, sx, sy, srcW, srcH, 0, 0, targetW, targetH);
 
-    // 픽셀
     pixels.forEach(({ x, y, color }) => {
       ctx.fillStyle = color;
       ctx.fillRect(
@@ -131,7 +158,6 @@ export default function PixelEditor() {
       );
     });
 
-    // 격자선
     ctx.strokeStyle = "rgba(0,255,255,0.15)";
     for (let gx = 0; gx <= CELL_PIXEL_W; gx++) {
       const x = (gx * targetW) / CELL_PIXEL_W;
@@ -149,7 +175,9 @@ export default function PixelEditor() {
     }
   }, [baseImg, pixels, cellId, planet, canvasSize]);
 
-  // ✅ 픽셀 찍기 / 지우기
+  // ================================
+  // 🔥 drawAt (히스토리 저장 없음)
+  // ================================
   const drawAt = (clientX, clientY) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const relX = clientX - rect.left;
@@ -161,6 +189,7 @@ export default function PixelEditor() {
 
     setPixels((prev) => {
       const idx = prev.findIndex((p) => p.x === x && p.y === y);
+
       if (eraseMode) {
         if (idx >= 0) {
           const next = [...prev];
@@ -179,13 +208,38 @@ export default function PixelEditor() {
     });
   };
 
-  // ✅ 전체 초기화
+  // ================================
+  // 🔥 드래그 이벤트 (한 번만 Undo push)
+  // ================================
+  const handleMouseDown = (e) => {
+    // 🔥 드래그 시작할 때 단 1번만 Undo 저장
+    setHistory((prev) => [...prev, pixels.map((p) => ({ ...p }))]);
+
+    setIsDrawing(true);
+    drawAt(e.clientX, e.clientY);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDrawing) return;
+    drawAt(e.clientX, e.clientY);
+  };
+
+  const handleMouseUp = () => {
+    setIsDrawing(false);
+  };
+
+  // ================================
+  // 초기화
+  // ================================
   const handleClear = () => {
-    if (!window.confirm("정말 모든 픽셀을 초기화할까요?")) return;
+    if (!window.confirm("정말 초기화할까요?")) return;
+    setHistory((prev) => [...prev, pixels.map((p) => ({ ...p }))]);
     setPixels([]);
   };
 
-  // ✅ 저장 (UUID 기반)
+  // ================================
+  // 저장
+  // ================================
   const handleSave = async () => {
     const jwt =
       localStorage.getItem("jwt") ||
@@ -203,16 +257,17 @@ export default function PixelEditor() {
         body: JSON.stringify({ token, pixels }),
       });
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result?.message);
-      alert("✅ 픽셀 저장 완료!");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      alert("저장 완료!");
     } catch (e) {
-      alert("서버 오류");
-      console.error(e);
+      alert("서버 오류 발생");
     }
   };
 
-  // ✅ 로딩 표시
+  // ================================
+  // Loading UI
+  // ================================
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -221,7 +276,9 @@ export default function PixelEditor() {
     );
   }
 
-  // ✅ 메인 UI
+  // ================================
+  // UI
+  // ================================
   return (
     <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center">
       <h2 className="text-2xl font-bold mb-6">
@@ -229,15 +286,13 @@ export default function PixelEditor() {
       </h2>
 
       <div className="flex items-center justify-center gap-10">
+
         {/* 왼쪽 버튼 */}
         <div className="flex flex-col gap-4">
           <button onClick={handleSave} className="btn btn-outline w-28 h-12">
             저장하기
           </button>
-          <button
-            onClick={() => navigate("/mypage")}
-            className="btn btn-outline w-28 h-12"
-          >
+          <button onClick={() => navigate("/mypage")} className="btn btn-outline w-28 h-12">
             돌아가기
           </button>
           <button onClick={handleClear} className="btn btn-outline w-28 h-12">
@@ -245,11 +300,13 @@ export default function PixelEditor() {
           </button>
         </div>
 
-        {/* 캔버스 */}
+        {/* Canvas */}
         <canvas
           ref={canvasRef}
-          onMouseDown={(e) => drawAt(e.clientX, e.clientY)}
-          onMouseMove={(e) => e.buttons === 1 && drawAt(e.clientX, e.clientY)}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
           style={{
             border: "1px solid cyan",
             cursor: eraseMode ? "not-allowed" : "crosshair",
@@ -260,7 +317,7 @@ export default function PixelEditor() {
           }}
         />
 
-        {/* 🎨 오른쪽 컬러피커 */}
+        {/* Color Picker */}
         <div className="flex flex-col items-center gap-4 w-44">
           <HexColorPicker color={color} onChange={setColor} />
           <HexColorInput

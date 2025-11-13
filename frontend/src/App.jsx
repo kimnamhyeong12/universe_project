@@ -1,8 +1,7 @@
 // src/App.jsx
 
-// ✅ [추가] useEffect, useState 임포트
-import React, { useEffect, useState } from "react"; 
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
 import SplashPage from "./pages/SplashPage.jsx";
@@ -11,20 +10,17 @@ import Universe from "./pages/Universe.jsx";
 import MyPage from "./pages/mypage.jsx";
 import MarketPage from "./pages/MarketPage.jsx";
 import PixelEditor from "./pages/PixelEditor.jsx";
-import ViewPlanet from "./pages/ViewPlanet.jsx"; 
+import ViewPlanet from "./pages/ViewPlanet.jsx";
+import Modal from "./components/Modal.jsx";
 
-// ✅ [추가] Modal 컴포넌트 임포트
-import Modal from "./components/Modal.jsx"; 
+import { CheckoutPage } from "./pages/Checkout.jsx";
+import { SuccessPage } from "./pages/Success.jsx";
+import { FailPage } from "./pages/Fail.jsx";
 
-// Toss
-import { CheckoutPage } from "./pages/Checkout";
-import { SuccessPage } from "./pages/Success";
-import { FailPage } from "./pages/Fail";
+import WplaceEditor from "./pages/WplaceEditor.jsx";
 
-
-
+// -----------------------------
 function LandingShell() {
-  // ... (이 부분은 수정 없음) ...
   const [view, setView] = useState("splash");
   const loc = useLocation();
 
@@ -48,24 +44,21 @@ function LandingShell() {
   );
 }
 
+// -----------------------------
 export default function App() {
-  
-  // ✅ [추가] SplashPage에서 가져온 로그인 모달 상태
   const [loginOpen, setLoginOpen] = useState(false);
 
-  // ✅ [추가] SplashPage에서 가져온 로그인 이벤트 리스너
   useEffect(() => {
-    const open = () => setLoginOpen(true);
-    window.addEventListener("celestia:open-login", open);
-    return () => window.removeEventListener("celestia:open-login", open);
+    const openLogin = () => setLoginOpen(true);
+    window.addEventListener("celestia:open-login", openLogin);
+    return () => window.removeEventListener("celestia:open-login", openLogin);
   }, []);
 
   return (
     <AuthProvider>
-      
-      {/* ✅ [추가] Routes 밖에 Modal을 배치하여 전역으로 사용 */}
       <Modal title="로그인" isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
 
+      {/* ❗ BrowserRouter 제거됨 (main.jsx에서 이미 감싸고 있음) */}
       <Routes>
         <Route path="/" element={<LandingShell />} />
         <Route path="/universe" element={<Universe />} />
@@ -73,12 +66,18 @@ export default function App() {
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/pixel/edit/:token" element={<PixelEditor />} />
         <Route path="/view/:planet" element={<ViewPlanet />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+
+        {/* WPLACE Editor */}
+        <Route path="/wplace/:planet" element={<WplaceEditor />} />
+
+        {/* Toss */}
         <Route path="/sandbox" element={<CheckoutPage />} />
         <Route path="/sandbox/success" element={<SuccessPage />} />
         <Route path="/sandbox/fail" element={<FailPage />} />
-      </Routes>
 
+        {/* fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </AuthProvider>
   );
 }
