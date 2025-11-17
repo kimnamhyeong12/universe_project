@@ -44,6 +44,12 @@ export default function AppHeader({ activeLink }) {
           >
             상점
           </Link>
+          <Link 
+            to="/NFTmarket" 
+            className={`site-header__link ${activeLink === "NFTmarket" ? "is-active" : ""}`}
+          >
+            NFT상점
+          </Link>
         </nav>
 
         {/* 3. Right: Auth actions (치우침 방지 레이아웃 적용됨) */}

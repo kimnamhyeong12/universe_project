@@ -42,7 +42,7 @@ export default function SplashPage({ onEnter }) {
     return () => io.disconnect();
   }, []);
 
-  const handleEnter = () => (onEnter ? onEnter() : nav("/universe"));
+  const handleEnter = () => (onEnter ?  nav("/universe") : onEnter());
 
   // ✅ 마켓 페이지로 이동 (선택 플랜 전달)
   const gotoMarket = (planName) => {
