@@ -66,6 +66,7 @@ const marketRoutes = require("./routes/market"); // ✅ 마켓 라우트 추가
 const purchaseRoutes = require("./routes/purchaseRoutes");
 const pixelRoutes = require("./routes/pixelRoutes");
 const paymentsRouter = require("./payments/payments.router"); // ✅ 토스 결제 라우터
+const pointRoutes = require("./routes/pointsRoutes"); // 포인트 라우트
 
 
 // ======== 라우트 연결 ========
@@ -81,6 +82,8 @@ app.use("/api/purchase", purchaseRoutes);
 app.use("/api/pixels", pixelRoutes);
 app.use("/payments", paymentsRouter); // ✅ 토스 결제 라우터 통합 연결
 app.use("/api/payments", paymentsRouter);
+app.use("/api/points", pointRoutes);
+
 
 // ======== 인증서 및 정적 파일 공개 ========
 app.use("/certs", express.static(path.join(__dirname, "certs")));
