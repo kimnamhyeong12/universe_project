@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import CellDetailPanel from "./CellDetailPanel";
 
 const GRID_W = 10;
 const GRID_H = 10;
@@ -24,6 +25,7 @@ export default function ViewPlanet() {
 
   const [pixelData, setPixelData] = useState([]);
   const [hoverInfo, setHoverInfo] = useState(null);
+  const [selectedCell, setSelectedCell] = useState(null);
 
   const [zoom, setZoom] = useState(1);
   const [zoomMin, setZoomMin] = useState(1);
@@ -33,12 +35,29 @@ export default function ViewPlanet() {
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
 
-  // ⭐ 기본 화면 중앙 정렬은 "단 1번만" 수행
   const firstRender = useRef(true);
 
-  // 화면 크기
   const VIEW_W = 1200;
   const VIEW_H = 600;
+
+  // ============================================================
+  // 🔥 좋아요 업데이트 → 부모 pixelData 반영
+  // ============================================================
+  const handleLikeUpdate = (pixelId, newLikes, newLikedBy) => {
+    setPixelData((prev) =>
+      prev.map((cell) =>
+        cell._id === pixelId
+          ? { ...cell, likes: newLikes, likedBy: newLikedBy }
+          : cell
+      )
+    );
+
+    setSelectedCell((prev) =>
+      prev && prev._id === pixelId
+        ? { ...prev, likes: newLikes, likedBy: newLikedBy }
+        : prev
+    );
+  };
 
   // 🔥 픽셀 데이터 로딩
   useEffect(() => {
@@ -50,7 +69,6 @@ export default function ViewPlanet() {
     load();
   }, [planet]);
 
-  // 🔥 pan 범위 제한
   function clampPan(px, py) {
     const canvas = canvasRef.current;
     if (!canvas) return { x: px, y: py };
@@ -67,7 +85,7 @@ export default function ViewPlanet() {
     };
   }
 
-  // 🔥 캔버스 렌더링
+  // 캔버스 렌더링
   const drawCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -79,7 +97,6 @@ export default function ViewPlanet() {
     img.onload = () => {
       let autoZoom = zoom;
 
-      // ⭐ 처음 로딩일 때만 fit-to-screen
       if (firstRender.current && zoom === 1) {
         const scaleW = VIEW_W / img.width;
         const scaleH = VIEW_H / img.height;
@@ -97,16 +114,14 @@ export default function ViewPlanet() {
 
       ctx.drawImage(img, 0, 0, baseW, baseH);
 
-      // ⭐ 중앙 정렬은 오직 처음 로딩 때만 실행
       if (firstRender.current) {
         setPan({
           x: (VIEW_W - baseW) / 2,
           y: (VIEW_H - baseH) / 2,
         });
-        firstRender.current = false; // 🔥 이후 절대 중앙 정렬 금지
+        firstRender.current = false;
       }
 
-      // 픽셀 채우기
       const cellW = baseW / GRID_W;
       const cellH = baseH / GRID_H;
 
@@ -133,10 +148,8 @@ export default function ViewPlanet() {
 
   useEffect(drawCanvas, [zoom, pixelData]);
 
-  // 🔍 줌 (최소 줌 이하로 축소 금지)
   const handleWheel = (e) => {
     e.preventDefault();
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -145,14 +158,11 @@ export default function ViewPlanet() {
     const mouseY = e.clientY - rect.top;
 
     let newZoom = zoom + (e.deltaY > 0 ? -0.1 : 0.1);
-
-    // ⭐ zoomMin 이하로 축소 불가
     newZoom = Math.max(zoomMin, Math.min(newZoom, 4));
 
     const zoomRatio = newZoom / zoom;
     setZoom(newZoom);
 
-    // 기존 pan 유지 + 마우스 기준의 자연스러운 줌
     setTimeout(() => {
       const newPanX = pan.x - (mouseX * zoomRatio - mouseX);
       const newPanY = pan.y - (mouseY * zoomRatio - mouseY);
@@ -160,13 +170,41 @@ export default function ViewPlanet() {
     }, 0);
   };
 
-  // 🖱 드래그 이동
   const onMouseDown = (e) => {
     dragging.current = true;
     dragStart.current = { x: e.clientX, y: e.clientY };
     panStart.current = { ...pan };
   };
-  const onMouseUp = () => (dragging.current = false);
+
+  const onMouseUp = (e) => {
+    dragging.current = false;
+    const dx = Math.abs(e.clientX - dragStart.current.x);
+    const dy = Math.abs(e.clientY - dragStart.current.y);
+    if (dx < 5 && dy < 5) handleCellClick(e);
+  };
+
+  function handleCellClick(e) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const realX = e.clientX - rect.left;
+    const realY = e.clientY - rect.top;
+
+    const cellW = canvas.width / GRID_W;
+    const cellH = canvas.height / GRID_H;
+
+    const cx = Math.floor(realX / cellW);
+    const cy = Math.floor(realY / cellH);
+
+    const id = `${cx}-${cy}`;
+
+    const cell = pixelData.find((p) => p.cellId === id);
+
+    if (!cell) return;
+
+    setSelectedCell(cell);
+  }
 
   const onMouseMove = (e) => {
     if (dragging.current) {
@@ -175,7 +213,6 @@ export default function ViewPlanet() {
       setPan(clampPan(panStart.current.x + dx, panStart.current.y + dy));
     }
 
-    // Hover
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -255,6 +292,16 @@ export default function ViewPlanet() {
           🛒 마켓
         </Link>
       </div>
+
+      {/* 오른쪽 패널 */}
+      {selectedCell && (
+        <CellDetailPanel
+          cell={selectedCell}
+          planet={planet}
+          onClose={() => setSelectedCell(null)}
+          onLikeUpdate={handleLikeUpdate}   // ★ 중요: 좋아요 반영
+        />
+      )}
     </div>
   );
 }

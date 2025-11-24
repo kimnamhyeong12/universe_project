@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
 import { jwtDecode } from "https://esm.sh/jwt-decode@4.0.0";
 
-// =============================================================
-// AuthContext: 전역 인증 상태(로그인, 회원가입, 로그아웃 관리)
-// =============================================================
-
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -14,12 +10,17 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // ✅ 앱 최초 실행 시 localStorage에서 토큰 복원
+  // 앱 최초 실행 시 localStorage 복원
   useEffect(() => {
     const token = localStorage.getItem("celestia_token");
     if (token) {
       try {
         const decoded = jwtDecode(token);
+
+        // ⭐ userId, jwt 저장 보완
+        localStorage.setItem("userId", decoded.id);
+        localStorage.setItem("jwt", token);
+
         setUser({
           username: decoded.username,
           email: decoded.email,
@@ -29,11 +30,13 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error("토큰 해석 오류:", error);
         localStorage.removeItem("celestia_token");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("jwt");
       }
     }
   }, []);
 
-  // ✅ 로그인
+  // 로그인
   const login = async (email, password) => {
     try {
       const response = await fetch("http://localhost:5000/api/auth/login", {
@@ -49,6 +52,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("celestia_token", token);
 
       const decoded = jwtDecode(token);
+
+      // ⭐ 여기 추가됨
+      localStorage.setItem("userId", decoded.id);
+      localStorage.setItem("jwt", token);
+
       setUser({
         username: decoded.username,
         email: decoded.email,
@@ -63,13 +71,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ 로그아웃
+  // 로그아웃
   const logout = () => {
     localStorage.removeItem("celestia_token");
+    localStorage.removeItem("userId");     // ⭐ 추가됨
+    localStorage.removeItem("jwt");        // ⭐ 추가됨
     setUser(null);
   };
 
-  // ✅ 회원가입
+  // 회원가입
   const register = async (username, email, password) => {
     try {
       const response = await fetch("http://localhost:5000/api/auth/register", {
