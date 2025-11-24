@@ -20,6 +20,7 @@ import { FailPage } from "./pages/Fail.jsx";
 import WplaceEditor from "./pages/WplaceEditor.jsx";
 
 import PointChargePage from "./pages/PointChargePage.jsx";
+import CommunityHome from "./pages/community/CommunityHome.jsx";
 
 
 // -----------------------------
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/pixel/edit/:token" element={<PixelEditor />} />
         <Route path="/view/:planet" element={<ViewPlanet />} />
         <Route path="/points/charge" element={<PointChargePage />} />
+        <Route path="/community" element={<CommunityHome />} />
 
 
         {/* WPLACE Editor */}
