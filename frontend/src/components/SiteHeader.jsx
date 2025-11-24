@@ -46,6 +46,14 @@ export default function SiteHeader({ anchors = {} }) {
     setOpenLogin(false);
   }, [openLogin]);
 
+  const navItems = [
+    { id: "about", label: "CELESTIA란?", onClick: () => goto("about") },
+    { id: "capability", label: "기술 역량", onClick: () => goto("capability") },
+    { id: "gallery", label: "갤러리", onClick: () => goto("gallery") },
+    { id: "community", label: "커뮤니티", onClick: () => nav("/community") },
+    { id: "contact", label: "문의", onClick: () => goto("contact") },
+  ];
+
   return (
     <header className={`site-header ${scrolled ? "site-header--scrolled" : ""}`}>
       <div className="site-header__progress" ref={progressRef} />
@@ -55,16 +63,11 @@ export default function SiteHeader({ anchors = {} }) {
         </div>
 
         <nav className="site-header__nav">
-          {[
-            ["about", "CELESTIA란?"],
-            ["capability", "기술 역량"],
-            ["gallery", "갤러리"],
-            ["contact", "문의"],
-          ].map(([id, label]) => (
+          {navItems.map(({ id, label, onClick }) => (
             <button
-              key={id}
+              key={label}
               className={`site-header__link ${active === id ? "is-active" : ""}`}
-              onClick={() => goto(id)}
+              onClick={onClick}
             >
               {label}
             </button>
