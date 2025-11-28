@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import "../styles/celestia-styles.css"; // 필요 시
+//import "../styles/celestia-styles.css"; // 필요 시
+import "../styles/NftVerify.css";
 
 export default function NftVerify() {
   const { id } = useParams();
@@ -36,7 +37,7 @@ export default function NftVerify() {
         <img
           src={nft.imageDataUrl}
           alt="NFT Artwork"
-          style={{ width: 240, borderRadius: 12, margin: "20px 0" }}
+          //style={{ width: 240, borderRadius: 12, margin: "20px 0" }}
         />
 
         <p><b>소유자</b>: {nft.ownerName}</p>
