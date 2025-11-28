@@ -21,6 +21,7 @@ import WplaceEditor from "./pages/WplaceEditor.jsx";
 
 import PointChargePage from "./pages/PointChargePage.jsx";
 import CommunityHome from "./pages/community/CommunityHome.jsx";
+import RankingBoard from "./components/community/RankingBoard.jsx";
 
 import NFTmarket from "./pages/NFTmarket.jsx";
 import NftVerify from "./pages/NftVerify";
@@ -76,6 +77,7 @@ export default function App() {
         <Route path="/view/:planet" element={<ViewPlanet />} />
         <Route path="/points/charge" element={<PointChargePage />} />
         <Route path="/community" element={<CommunityHome />} />
+        <Route path="/community/ranking" element={<RankingBoard />} />
         <Route path="/nft/verify/:id" element={<NftVerify />} />
 
 
