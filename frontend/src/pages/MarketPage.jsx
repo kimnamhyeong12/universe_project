@@ -10,22 +10,17 @@ export default function MarketPage() {
   const nav = useNavigate();
   const location = useLocation();
 
-  // ⭐ 토큰은 전역 user가 아니라 localStorage로 직접 가져와야 함
   const token = localStorage.getItem("celestia_token");
 
-  // 자산 목록 및 상태
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState(null);
 
-  // 패널 / 모달 상태
   const [showPurchase, setShowPurchase] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
 
-  // ⭐ 유저 포인트 불러오기
   const [pointBalance, setPointBalance] = useState(0);
 
-  // Universe에서 asset 전달 시 자동 열기
   const { asset } = location.state || {};
 
   useEffect(() => {
@@ -35,7 +30,7 @@ export default function MarketPage() {
     }
   }, [asset]);
 
-  // ⭐ 1) 서버에서 마켓 자산 불러오기
+  // ⭐ 마켓 목록 불러오기
   useEffect(() => {
     async function fetchMarket() {
       try {
@@ -48,9 +43,10 @@ export default function MarketPage() {
           ...(data.galaxies || []).map((a) => ({ ...a, type: "Galaxy" })),
           ...(data.blackholes || []).map((a) => ({ ...a, type: "Blackhole" })),
         ];
+
         setAssets(all);
       } catch (err) {
-        console.error("❌ 마켓 데이터 불러오기 실패:", err);
+        console.error("❌ 마켓 불러오기 실패:", err);
       } finally {
         setLoading(false);
       }
@@ -59,7 +55,7 @@ export default function MarketPage() {
     fetchMarket();
   }, []);
 
-  // ⭐ 2) 포인트 불러오기
+  // ⭐ 포인트 잔액 불러오기
   useEffect(() => {
     async function loadBalance() {
       const token = localStorage.getItem("celestia_token");
@@ -80,7 +76,6 @@ export default function MarketPage() {
     loadBalance();
   }, []);
 
-  // 구매 버튼 클릭 (패널 열기)
   const handleBuy = (type, id, name, price, imageUrl) => {
     const token = localStorage.getItem("celestia_token");
 
@@ -127,6 +122,7 @@ export default function MarketPage() {
                 alt={asset.name}
                 className="item-image"
               />
+
               <div className="item-info">
                 <div className="item-type">{asset.type}</div>
                 <div className="item-name">{asset.name}</div>
@@ -157,7 +153,7 @@ export default function MarketPage() {
         </div>
       )}
 
-      {/* ⭐ 구매 패널 */}
+      {/* 구매 패널 */}
       {showPurchase && selectedAsset && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50">
           <PurchasePanel
@@ -173,7 +169,7 @@ export default function MarketPage() {
         </div>
       )}
 
-      {/* ⭐ 포인트 결제 모달 */}
+      {/* 포인트 결제 모달 */}
       {showPayment && (
         <Modal
           title="💳 포인트 결제"
@@ -220,41 +216,8 @@ export default function MarketPage() {
                     return;
                   }
 
-                  alert("🎉 결제 성공! 인증서가 발급됩니다.");
-
-                  // 다운로드 로직
-                  const purchaseIds = data.purchaseIds;
-
-                  for (const pid of purchaseIds) {
-                    try {
-                      const pdfRes = await fetch(
-                        "http://localhost:5000/api/certificates/issue",
-                        {
-                          method: "POST",
-                          headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({ purchaseId: pid }),
-                        }
-                      );
-
-                      const blob = await pdfRes.blob();
-                      const url = window.URL.createObjectURL(blob);
-
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `certificate-${pid}.pdf`;
-                      document.body.appendChild(a);
-                      a.click();
-                      a.remove();
-
-                      window.URL.revokeObjectURL(url);
-                    } catch (err) {
-                      console.error("❌ PDF 다운로드 오류:", err);
-                      alert("일부 인증서 다운로드에 실패했습니다.");
-                    }
-                  }
+                  // 🎉 인증서 발급 제거 → 성공 메시지만 표시
+                  alert("🎉 결제 성공! 구매가 완료되었습니다.");
 
                   setShowPayment(false);
                 } catch (err) {

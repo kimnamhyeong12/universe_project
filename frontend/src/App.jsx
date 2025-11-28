@@ -22,6 +22,9 @@ import WplaceEditor from "./pages/WplaceEditor.jsx";
 import PointChargePage from "./pages/PointChargePage.jsx";
 import CommunityHome from "./pages/community/CommunityHome.jsx";
 
+import NFTmarket from "./pages/NFTmarket.jsx";
+import NftVerify from "./pages/NftVerify";
+
 
 // -----------------------------
 function LandingShell() {
@@ -69,13 +72,19 @@ export default function App() {
         <Route path="/market" element={<MarketPage />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/pixel/edit/:token" element={<PixelEditor />} />
+        <Route path="/pixel/edit-nft/:nftId" element={<PixelEditor />} />  {/* ✅ 추가 */}
         <Route path="/view/:planet" element={<ViewPlanet />} />
         <Route path="/points/charge" element={<PointChargePage />} />
         <Route path="/community" element={<CommunityHome />} />
+        <Route path="/nft/verify/:id" element={<NftVerify />} />
+
 
 
         {/* WPLACE Editor */}
         <Route path="/wplace/:planet" element={<WplaceEditor />} />
+
+        {/* NFTmarket */}
+        <Route path="/nftmarket" element={<NFTmarket />} />
 
         {/* Toss */}
         <Route path="/sandbox" element={<CheckoutPage />} />

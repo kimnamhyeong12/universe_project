@@ -17,6 +17,9 @@ const purchaseSchema = new mongoose.Schema({
 
   // 🧩 UUID 기반 편집 접근 토큰
   editToken: { type: String, unique: true },
+
+  isNft: { type: Boolean, default: false },
+  sourceNft: { type: mongoose.Schema.Types.ObjectId, ref: "NFT", default: null },
 });
 
 // ✅ 중복 모델 등록 방지

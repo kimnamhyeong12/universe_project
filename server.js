@@ -20,8 +20,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: "http://localhost:5173", // 프론트엔드 주소
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
 
 // ======== MongoDB 연결 ========
 mongoose.connect(process.env.MONGO_URI)
@@ -67,6 +71,7 @@ const purchaseRoutes = require("./routes/purchaseRoutes");
 const pixelRoutes = require("./routes/pixelRoutes");
 const paymentsRouter = require("./payments/payments.router"); // ✅ 토스 결제 라우터
 const pointRoutes = require("./routes/pointsRoutes"); // 포인트 라우트
+const nftRoutes = require("./routes/nft"); // NFT 상점 라우트
 
 
 // ======== 라우트 연결 ========
@@ -83,6 +88,7 @@ app.use("/api/pixels", pixelRoutes);
 app.use("/payments", paymentsRouter); // ✅ 토스 결제 라우터 통합 연결
 app.use("/api/payments", paymentsRouter);
 app.use("/api/points", pointRoutes);
+app.use("/api/nft", nftRoutes);
 
 
 // ======== 인증서 및 정적 파일 공개 ========

@@ -45,8 +45,8 @@ export default function AppHeader({ activeLink }) {
             상점
           </Link>
           <Link 
-            to="/NFTmarket" 
-            className={`site-header__link ${activeLink === "NFTmarket" ? "is-active" : ""}`}
+            to="/nftmarket" 
+            className={`site-header__link ${activeLink === "nftmarket" ? "is-active" : ""}`}
           >
             NFT상점
           </Link>

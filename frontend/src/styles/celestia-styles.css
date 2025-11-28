@@ -258,3 +258,31 @@ html { scroll-behavior: smooth; }
   transform: translateY(-1px);
   color: #fff;
 }
+
+.verify-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.verify-box {
+  width: 340px;
+  padding: 25px;
+  background: #ffffffcc;
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px #00000030;
+}
+
+.verify-box.invalid {
+  background: #ffcccccc;
+  border: 1px solid #ff4444;
+}
+
+.valid-mark {
+  margin-top: 20px;
+  color: #1aa300;
+  font-weight: bold;
+  font-size: 18px;
+}
