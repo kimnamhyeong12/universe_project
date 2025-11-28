@@ -114,6 +114,12 @@
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
+.nav-links .ranking-link {
+  border: 1px solid rgba(110, 232, 255, 0.4);
+  border-radius: 999px;
+  padding: 6px 16px;
+}
+
 .nav-links a:hover {
   color: #ffffff;
   transform: translateY(-2px);

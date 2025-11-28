@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SiteHeader from "../components/SiteHeader.jsx";
+import GalleryHallOfFame from "../components/home/GalleryHallOfFame.jsx";
 import { useAuth } from "../context/AuthContext";
 import "../styles/landing.css";
 
@@ -142,6 +143,7 @@ export default function SplashPage({ onEnter }) {
               />
             ))}
           </div>
+          <GalleryHallOfFame />
         </div>
       </section>
 

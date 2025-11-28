@@ -1,5 +1,6 @@
 // frontend/src/pages/community/CommunityHome.jsx
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "../../styles/community.css";
 
 const planetShowcase = [
@@ -295,6 +296,9 @@ export default function CommunityHome() {
               {link.label}
             </a>
           ))}
+          <Link to="/community/ranking" className="ranking-link">
+            Ranking
+          </Link>
         </nav>
         <div className="language-toggle" role="group" aria-label={content.buttons.language}>
           {["ko", "en"].map((code) => (
