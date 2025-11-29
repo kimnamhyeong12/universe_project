@@ -1,6 +1,5 @@
 // ================================
-// pixelRoutes.js — 최소 안정판
-// 각 셀별 인기도(likes) DB에 저장/유지
+// pixelRoutes.js — 픽셀 조회 / 좋아요 / 랭킹 API
 // ================================
 const express = require("express");
 const router = express.Router();
@@ -9,21 +8,22 @@ const Pixel = require("../models/Pixel");
 const Purchase = require("../models/Purchase");
 const verifyToken = require("../middleware/verifyToken");
 
-// 🔥 1. 행성 전체 픽셀 + 인기도 조회
+
+// ====================================================================
+// 🔥 1. 행성 전체 픽셀 조회
+// ====================================================================
 router.get("/planet/:planetName", async (req, res) => {
   try {
     const { planetName } = req.params;
 
-    // 이 행성의 Pixel 문서 전부
     const pixelDocs = await Pixel.find({ planetName });
-
-    // 구매 정보 (소유주 이름용)
     const purchases = await Purchase.find({ planetName });
+
     const purchaseMap = {};
     purchases.forEach((p) => {
       purchaseMap[p.cellId] = {
         ownerId: p.owner?.toString(),
-        ownerName: p.buyer || p.ownerName || "미확인 사용자",
+        ownerName: p.buyer || p.ownerName || "Unknown",
       };
     });
 
@@ -36,7 +36,7 @@ router.get("/planet/:planetName", async (req, res) => {
         cellId: cell.cellId,
         pixels: cell.pixels || [],
         ownerId: info.ownerId || cell.owner,
-        ownerName: info.ownerName || "미확인 사용자",
+        ownerName: info.ownerName || "Unknown",
         likes: cell.likes || 0,
         likedBy: cell.likedBy || [],
       };
@@ -49,7 +49,10 @@ router.get("/planet/:planetName", async (req, res) => {
   }
 });
 
+
+// ====================================================================
 // 🔥 2. 좋아요 토글
+// ====================================================================
 router.post("/:pixelId/like", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -61,12 +64,10 @@ router.post("/:pixelId/like", verifyToken, async (req, res) => {
     const already = pixel.likedBy.map(String).includes(String(userId));
 
     if (already) {
-      pixel.likes = Math.max(0, (pixel.likes || 0) - 1);
-      pixel.likedBy = pixel.likedBy.filter(
-        (id) => String(id) !== String(userId)
-      );
+      pixel.likes = Math.max(0, pixel.likes - 1);
+      pixel.likedBy = pixel.likedBy.filter((id) => String(id) !== String(userId));
     } else {
-      pixel.likes = (pixel.likes || 0) + 1;
+      pixel.likes += 1;
       pixel.likedBy.push(userId);
     }
 
@@ -82,7 +83,10 @@ router.post("/:pixelId/like", verifyToken, async (req, res) => {
   }
 });
 
-// 🔥 3. byToken / saveByToken (픽셀 그리기용, 기존 기능 유지)
+
+// ====================================================================
+// 🔥 3. 픽셀 저장 byToken
+// ====================================================================
 router.get("/byToken/:token", verifyToken, async (req, res) => {
   try {
     const token = req.params.token;
@@ -111,6 +115,10 @@ router.get("/byToken/:token", verifyToken, async (req, res) => {
   }
 });
 
+
+// ====================================================================
+// 🔥 4. 픽셀 저장
+// ====================================================================
 router.post("/saveByToken", verifyToken, async (req, res) => {
   try {
     const { token, pixels } = req.body;
@@ -147,5 +155,20 @@ router.post("/saveByToken", verifyToken, async (req, res) => {
     res.status(500).json({ message: "서버 오류" });
   }
 });
+
+
+// ====================================================================
+// 🔥 5. 픽셀 랭킹 (정렬 없이 전체 Pixel 반환)
+// ====================================================================
+router.get("/ranking", async (req, res) => {
+  try {
+    const pixels = await Pixel.find();
+    res.json(pixels);
+  } catch (err) {
+    console.error("❌ 랭킹 조회 오류:", err);
+    res.status(500).json({ message: "서버 오류" });
+  }
+});
+
 
 module.exports = router;
