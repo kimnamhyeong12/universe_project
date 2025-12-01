@@ -6,6 +6,7 @@ const router = express.Router();
 
 const Pixel = require("../models/Pixel");
 const Purchase = require("../models/Purchase");
+const NFT = require("../models/NFT");
 const verifyToken = require("../middleware/verifyToken");
 
 
@@ -24,6 +25,8 @@ router.get("/planet/:planetName", async (req, res) => {
       purchaseMap[p.cellId] = {
         ownerId: p.owner?.toString(),
         ownerName: p.buyer || p.ownerName || "Unknown",
+        isNft: p.isNft || false,
+        nftId: p.sourceNft || null
       };
     });
 
@@ -37,6 +40,8 @@ router.get("/planet/:planetName", async (req, res) => {
         pixels: cell.pixels || [],
         ownerId: info.ownerId || cell.owner,
         ownerName: info.ownerName || "Unknown",
+        isNft: info.isNft || false,
+        nftId: info.nftId || null,
         likes: cell.likes || 0,
         likedBy: cell.likedBy || [],
       };
@@ -65,7 +70,7 @@ router.post("/:pixelId/like", verifyToken, async (req, res) => {
 
     if (already) {
       pixel.likes = Math.max(0, pixel.likes - 1);
-      pixel.likedBy = pixel.likedBy.filter((id) => String(id) !== String(userId));
+      pixel.likedBy = pixel.llikedBy.filter((id) => String(id) !== String(userId));
     } else {
       pixel.likes += 1;
       pixel.likedBy.push(userId);
@@ -85,7 +90,7 @@ router.post("/:pixelId/like", verifyToken, async (req, res) => {
 
 
 // ====================================================================
-// 🔥 3. 픽셀 저장 byToken
+// 🔥 3. 픽셀 조회 (byToken)
 // ====================================================================
 router.get("/byToken/:token", verifyToken, async (req, res) => {
   try {
@@ -158,14 +163,51 @@ router.post("/saveByToken", verifyToken, async (req, res) => {
 
 
 // ====================================================================
-// 🔥 5. 픽셀 랭킹 (정렬 없이 전체 Pixel 반환)
+// 🔥 5. NFT 등록된 셀만 랭킹에 포함
+//     가격, 조회수, 인기도 포함해서 RankingBoard에 전달
 // ====================================================================
 router.get("/ranking", async (req, res) => {
   try {
-    const pixels = await Pixel.find();
-    res.json(pixels);
+    // 1) NFT 등록된 셀만 가져오기
+    const purchases = await Purchase.find({ isNft: true });
+
+    if (!purchases.length) return res.json([]); // NFT 없으면 빈 배열
+
+    const nftPixelCells = purchases.map((p) => ({
+      cellId: p.cellId,
+      planetName: p.planetName,
+      ownerName: p.buyer,
+      price: p.amount,
+      nftId: p.sourceNft,
+    }));
+
+    const pixelDocs = await Pixel.find({
+      $or: nftPixelCells.map((c) => ({
+        planetName: c.planetName,
+        cellId: c.cellId,
+      })),
+    });
+
+    const result = pixelDocs.map((pixel) => {
+      const info = nftPixelCells.find((n) => n.cellId === pixel.cellId);
+
+      return {
+        _id: pixel._id,
+        planetName: pixel.planetName,
+        cellId: pixel.cellId,
+        pixels: pixel.pixels || [],
+        ownerName: info?.ownerName || "Unknown",
+        price: info?.price || 0,
+        nftId: info?.nftId || null,
+        likes: pixel.likes || 0,
+        views: pixel.views || 0,
+        updatedAt: pixel.updatedAt || pixel.createdAt,
+      };
+    });
+
+    res.json(result);
   } catch (err) {
-    console.error("❌ 랭킹 조회 오류:", err);
+    console.error("❌ NFT 랭킹 조회 오류:", err);
     res.status(500).json({ message: "서버 오류" });
   }
 });
